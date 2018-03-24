@@ -66,7 +66,7 @@ public class LinageMR extends JFrame {
 	public ArrayList<String> getDevices() {
 		ArrayList<String> returnValue = new ArrayList<>();
 		try {
-			String command = "ADB devices";
+			String command = txtAdb.getText()+" "+"devices";
 			String[] commands = new String[] { command };
 			for (String cmd : commands) {
 				Process process = Runtime.getRuntime().exec(cmd);
@@ -96,7 +96,7 @@ public class LinageMR extends JFrame {
 	public String getIpaddr(String e_n) {
 		String returnValue = "";
 		try {
-			String command = "ADB -s "+e_n+" shell ip addr show wlan0";
+			String command = txtAdb.getText()+" "+"-s "+e_n+" shell ip addr show wlan0";
 			String[] commands = new String[] { command };
 			for (String cmd : commands) {
 				Process process = Runtime.getRuntime().exec(cmd);
@@ -129,7 +129,7 @@ public class LinageMR extends JFrame {
 	
 	public void setPort(String e_n) {
 		try {
-			String command = "ADB -s "+e_n+" tcpip 5555";
+			String command = txtAdb.getText()+" "+"-s "+e_n+" tcpip 5555";
 			Runtime.getRuntime().exec(command);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -140,7 +140,7 @@ public class LinageMR extends JFrame {
 	
 	public void setConnect(String e_n) {
 		try {
-			String command = "ADB connect "+getIpaddr(e_n);
+			String command = txtAdb.getText()+" "+"connect "+getIpaddr(e_n);
 			Runtime.getRuntime().exec(command);
 		} catch (Exception e) {
 			e.printStackTrace();
