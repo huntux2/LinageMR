@@ -15,6 +15,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -49,7 +56,8 @@ public class LinageMR extends JFrame {
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args)throws
+    UnknownHostException, IOException, InterruptedException  {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -61,7 +69,19 @@ public class LinageMR extends JFrame {
 				}
 			}
 		});
+
 	}
+	
+	private JTextField txtstoragesdcardapplogtxt;
+	private JTextField txtShellInputTap_1;
+	private JTextField txtstoragesdcardapplogtxt_1;
+	private JTextField txtShellInputTap_2;
+	private JTextField txtstoragesdcardapplogtxt_2;
+	private JTextField txtShellInputTap_3;
+	private JTextField textField;
+	private JTextField textField_2;
+	private JTextField textField_3;
+	private JTextField textField_4;
 	
 	public ArrayList<String> getDevices() {
 		ArrayList<String> returnValue = new ArrayList<>();
@@ -149,11 +169,11 @@ public class LinageMR extends JFrame {
 		}
 	}
 	
-	public void start() {
-		System.out.println("실행");
+	public void start(String devices, String shell) {
+		System.out.println("실행:devices:"+devices+" "+"shell:"+shell);
 		String command = txtAdb.getText();
-		command += " "+"-s"+" "+list.getSelectedValue().toString();
-		command += " "+txtShellInputTap.getText();
+		command += " "+"-s"+" "+devices;
+		command += " "+shell;
 		String[] commands = new String[] { command };
 		excuteCmd(commands, false);
 	}
@@ -212,7 +232,7 @@ public class LinageMR extends JFrame {
 	 */
 	public LinageMR() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 404, 346);
+		setBounds(100, 100, 510, 479);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -229,7 +249,7 @@ public class LinageMR extends JFrame {
 				System.out.println(list.getSelectedValue());
 			}
 		});
-		btnNewButton.setBounds(169, 41, 97, 23);
+		btnNewButton.setBounds(169, 94, 97, 23);
 		contentPane.add(btnNewButton);
 		
 		JButton button = new JButton("연결");
@@ -243,12 +263,12 @@ public class LinageMR extends JFrame {
 				System.out.println(list.getSelectedValue());
 			}
 		});
-		button.setBounds(278, 10, 97, 54);
+		button.setBounds(278, 63, 97, 54);
 		contentPane.add(button);
 		
 		txtShellInputTap = new JTextField();
 		txtShellInputTap.setText("shell input tap 750 650");
-		txtShellInputTap.setBounds(81, 226, 294, 21);
+		txtShellInputTap.setBounds(68, 170, 198, 21);
 		contentPane.add(txtShellInputTap);
 		txtShellInputTap.setColumns(10);
 		
@@ -273,7 +293,7 @@ public class LinageMR extends JFrame {
 										close();
 									} else if("".equals(txtstoragesdcard.getText())) {
 										close();
-									} else if(null==list.getSelectedValue()) {
+									} else if("".equals(textField_1.getText())) {
 										close();
 									} else if("".equals(txtShellInputTap.getText())) {
 										close();
@@ -286,7 +306,6 @@ public class LinageMR extends JFrame {
 									num = Integer.parseInt(returnValue.split("::")[2]);
 								} catch (Exception e) {
 									// TODO Auto-generated catch block
-//									e.printStackTrace();
 									lblNewLabel_4.setText("에러 : " + returnValue);
 								}
 								if(!f_flag) {
@@ -294,9 +313,7 @@ public class LinageMR extends JFrame {
 									System.out.println("정지");
 								} else {
 									if(preNum < num) {
-										start();
-//										close();
-//										JOptionPane.showMessageDialog(null, "완료");
+										start(textField.getText(),txtShellInputTap.getText());
 									}
 								}
 								preNum = num;
@@ -304,59 +321,13 @@ public class LinageMR extends JFrame {
 						};
 						m_timer.schedule(m_task, 1000, 100);
 					}
-					/*
-					if(m_timer == null) {
-						m_timer = new Timer();
-						m_task = new TimerTask() {
-							String file_name = "C:\\Users\\YDH\\Downloads\\카카오토1.762\\LOG\\"+t1.getText();
-							File file = new File(file_name);
-							@Override
-							public void run() {
-//								file = file.listFiles()[file.listFiles().length - 1];
-//								t1.setText(file.getName());
-								// TODO Auto-generated method stub
-								try {
-									while(true) {
-										in = new BufferedReader(new InputStreamReader(new FileInputStream(file_name),"UTF-8"));
-										if(length<file.length()) {
-											if(!flag_first) {
-												System.out.println("귀환");
-												start();
-											} else {
-												System.out.println("실행");
-											}
-											length = file.length();
-											flag_first = false;
-										}
-										in.close();
-										if(flag_end) {
-											length = 0;
-											flag_tread = false;
-											System.out.println("완전종료");
-											break;
-										}
-										try {
-											Thread.sleep(500);
-										} catch (InterruptedException e) {
-											// TODO Auto-generated catch block
-											e.printStackTrace();
-										}
-									}
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-							}
-						};
-					}
-					*/
-//					m_timer.schedule(m_task, 1000, 100);
 					flag_tread = true;
 				} catch(Exception e1) {
 					e1.printStackTrace();
 				}
 			}
 		});
-		btnNewButton_1.setBounds(22, 267, 97, 23);
+		btnNewButton_1.setBounds(278, 146, 97, 23);
 		contentPane.add(btnNewButton_1);
 		
 		JButton btnNewButton_2 = new JButton("종료");
@@ -365,7 +336,7 @@ public class LinageMR extends JFrame {
 				close();
 			}
 		});
-		btnNewButton_2.setBounds(147, 266, 97, 23);
+		btnNewButton_2.setBounds(381, 146, 97, 23);
 		contentPane.add(btnNewButton_2);
 		
 		JButton btnNewButton_3 = new JButton("새로고침");
@@ -374,39 +345,39 @@ public class LinageMR extends JFrame {
 				list.setListData(getDevices().toArray());
 			}
 		});
-		btnNewButton_3.setBounds(169, 10, 97, 23);
+		btnNewButton_3.setBounds(169, 63, 97, 23);
 		contentPane.add(btnNewButton_3);
 		
 		textField_1 = new JTextField();
-		textField_1.setBounds(81, 85, 185, 21);
+		textField_1.setBounds(68, 32, 198, 21);
 		contentPane.add(textField_1);
 		textField_1.setColumns(10);
 		
 		JLabel lblNewLabel = new JLabel("파일");
-		lblNewLabel.setBounds(12, 194, 57, 15);
+		lblNewLabel.setBounds(12, 150, 44, 15);
 		contentPane.add(lblNewLabel);
 		
 		JLabel lblNewLabel_1 = new JLabel("명령어");
-		lblNewLabel_1.setBounds(12, 229, 57, 15);
+		lblNewLabel_1.setBounds(12, 173, 44, 15);
 		contentPane.add(lblNewLabel_1);
 		
 		JLabel lblNewLabel_2 = new JLabel("디바이스");
-		lblNewLabel_2.setBounds(12, 88, 57, 15);
+		lblNewLabel_2.setBounds(12, 35, 57, 15);
 		contentPane.add(lblNewLabel_2);
 		
 		txtstoragesdcard = new JTextField();
-		txtstoragesdcard.setText("/storage/sdcard0/app_log_2.txt");
-		txtstoragesdcard.setBounds(81, 191, 294, 21);
+		txtstoragesdcard.setText("/storage/sdcard0/app_log.txt");
+		txtstoragesdcard.setBounds(68, 147, 198, 21);
 		contentPane.add(txtstoragesdcard);
 		txtstoragesdcard.setColumns(10);
 		
 		JLabel lblNewLabel_3 = new JLabel("ADB");
-		lblNewLabel_3.setBounds(12, 158, 57, 15);
+		lblNewLabel_3.setBounds(12, 10, 44, 15);
 		contentPane.add(lblNewLabel_3);
 		
 		txtAdb = new JTextField();
 		txtAdb.setText("adb");
-		txtAdb.setBounds(81, 155, 294, 21);
+		txtAdb.setBounds(68, 7, 307, 21);
 		contentPane.add(txtAdb);
 		txtAdb.setColumns(10);
 		
@@ -419,11 +390,11 @@ public class LinageMR extends JFrame {
 				System.out.println(list.getSelectedValue());
 			}
 		});
-		btnNewButton_4.setBounds(278, 84, 97, 23);
+		btnNewButton_4.setBounds(278, 31, 97, 23);
 		contentPane.add(btnNewButton_4);
 		
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(12, 10, 145, 54);
+		scrollPane.setBounds(12, 63, 145, 54);
 		contentPane.add(scrollPane);
 		
 		list = new JList();
@@ -434,23 +405,364 @@ public class LinageMR extends JFrame {
 		JButton btnNewButton_5 = new JButton("실행");
 		btnNewButton_5.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(null!=list.getSelectedValue()) {
-					start();
+				if(!"".equals(textField.getText())) {
+					start(textField.getText(),txtShellInputTap.getText());
 					try {
 						flag_first = true;
 						flag_end = true;
 					} catch (Exception e1) {
 					}
 				}
-				System.out.println(list.getSelectedValue());
+				System.out.println(textField.getText());
 			}
 		});
-		btnNewButton_5.setBounds(268, 267, 97, 23);
+		btnNewButton_5.setBounds(278, 169, 97, 23);
 		contentPane.add(btnNewButton_5);
 		
 		lblNewLabel_4 = new JLabel("종료");
 		lblNewLabel_4.setHorizontalAlignment(SwingConstants.CENTER);
-		lblNewLabel_4.setBounds(114, 116, 152, 29);
+		lblNewLabel_4.setBounds(381, 170, 97, 21);
 		contentPane.add(lblNewLabel_4);
+		
+		JLabel lblNewLabel_5 = new JLabel("파일");
+		lblNewLabel_5.setBounds(12, 227, 44, 15);
+		contentPane.add(lblNewLabel_5);
+		
+		JLabel label = new JLabel("명령어");
+		label.setBounds(12, 250, 44, 15);
+		contentPane.add(label);
+		
+		JLabel lblNewLabel_6 = new JLabel("파일");
+		lblNewLabel_6.setBounds(12, 305, 44, 15);
+		contentPane.add(lblNewLabel_6);
+		
+		JLabel lblNewLabel_7 = new JLabel("명령어");
+		lblNewLabel_7.setBounds(12, 328, 44, 15);
+		contentPane.add(lblNewLabel_7);
+		
+		JLabel lblNewLabel_8 = new JLabel("파일");
+		lblNewLabel_8.setBounds(12, 383, 44, 15);
+		contentPane.add(lblNewLabel_8);
+		
+		JLabel lblNewLabel_9 = new JLabel("명령어");
+		lblNewLabel_9.setBounds(12, 406, 44, 15);
+		contentPane.add(lblNewLabel_9);
+		
+		txtstoragesdcardapplogtxt = new JTextField();
+		txtstoragesdcardapplogtxt.setText("/storage/sdcard0/app_log_2.txt");
+		txtstoragesdcardapplogtxt.setBounds(68, 224, 198, 21);
+		contentPane.add(txtstoragesdcardapplogtxt);
+		txtstoragesdcardapplogtxt.setColumns(10);
+		
+		txtShellInputTap_1 = new JTextField();
+		txtShellInputTap_1.setText("shell input tap 750 650");
+		txtShellInputTap_1.setBounds(68, 247, 198, 21);
+		contentPane.add(txtShellInputTap_1);
+		txtShellInputTap_1.setColumns(10);
+		
+		txtstoragesdcardapplogtxt_1 = new JTextField();
+		txtstoragesdcardapplogtxt_1.setText("/storage/sdcard0/app_log_3.txt");
+		txtstoragesdcardapplogtxt_1.setBounds(68, 302, 198, 21);
+		contentPane.add(txtstoragesdcardapplogtxt_1);
+		txtstoragesdcardapplogtxt_1.setColumns(10);
+		
+		txtShellInputTap_2 = new JTextField();
+		txtShellInputTap_2.setText("shell input tap 750 650");
+		txtShellInputTap_2.setBounds(68, 325, 198, 21);
+		contentPane.add(txtShellInputTap_2);
+		txtShellInputTap_2.setColumns(10);
+		
+		txtstoragesdcardapplogtxt_2 = new JTextField();
+		txtstoragesdcardapplogtxt_2.setText("/storage/sdcard0/app_log_4.txt");
+		txtstoragesdcardapplogtxt_2.setBounds(68, 380, 198, 21);
+		contentPane.add(txtstoragesdcardapplogtxt_2);
+		txtstoragesdcardapplogtxt_2.setColumns(10);
+		
+		txtShellInputTap_3 = new JTextField();
+		txtShellInputTap_3.setText("shell input tap 750 650");
+		txtShellInputTap_3.setBounds(68, 403, 198, 21);
+		contentPane.add(txtShellInputTap_3);
+		txtShellInputTap_3.setColumns(10);
+		
+		JButton btnNewButton_6 = new JButton("시작");
+		btnNewButton_6.setBounds(278, 223, 97, 23);
+		contentPane.add(btnNewButton_6);
+		
+		JButton btnNewButton_7 = new JButton("실행");
+		btnNewButton_7.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(!"".equals(textField_2.getText())) {
+					start(textField_2.getText(), txtShellInputTap_1.getText());
+					try {
+						flag_first = true;
+						flag_end = true;
+					} catch (Exception e1) {
+					}
+				}
+				System.out.println(textField_2.getText());
+			}
+		});
+		btnNewButton_7.setBounds(278, 246, 97, 23);
+		contentPane.add(btnNewButton_7);
+		
+		JButton btnNewButton_8 = new JButton("종료");
+		btnNewButton_8.setBounds(381, 223, 97, 23);
+		contentPane.add(btnNewButton_8);
+		
+		JButton btnNewButton_9 = new JButton("시작");
+		btnNewButton_9.setBounds(278, 301, 97, 23);
+		contentPane.add(btnNewButton_9);
+		
+		JButton btnNewButton_10 = new JButton("종료");
+		btnNewButton_10.setBounds(381, 301, 97, 23);
+		contentPane.add(btnNewButton_10);
+		
+		JButton btnNewButton_11 = new JButton("실행");
+		btnNewButton_11.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(!"".equals(textField_3.getText())) {
+					start(textField_3.getText(),txtShellInputTap_2.getText());
+					try {
+						flag_first = true;
+						flag_end = true;
+					} catch (Exception e1) {
+					}
+				}
+				System.out.println(textField_3.getText());
+			}
+		});
+		btnNewButton_11.setBounds(278, 324, 97, 23);
+		contentPane.add(btnNewButton_11);
+		
+		JButton btnNewButton_12 = new JButton("시작");
+		btnNewButton_12.setBounds(278, 379, 97, 23);
+		contentPane.add(btnNewButton_12);
+		
+		JButton btnNewButton_13 = new JButton("종료");
+		btnNewButton_13.setBounds(381, 379, 97, 23);
+		contentPane.add(btnNewButton_13);
+		
+		JButton btnNewButton_14 = new JButton("실행");
+		btnNewButton_14.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(!"".equals(textField_4.getText())) {
+					start(textField_4.getText(),txtShellInputTap_3.getText());
+					try {
+						flag_first = true;
+						flag_end = true;
+					} catch (Exception e1) {
+					}
+				}
+				System.out.println(textField_4.getText());
+			}
+		});
+		btnNewButton_14.setBounds(278, 402, 97, 23);
+		contentPane.add(btnNewButton_14);
+		
+		JLabel lblNewLabel_10 = new JLabel("종료");
+		lblNewLabel_10.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNewLabel_10.setBounds(381, 247, 97, 21);
+		contentPane.add(lblNewLabel_10);
+		
+		JLabel lblNewLabel_11 = new JLabel("종료");
+		lblNewLabel_11.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNewLabel_11.setBounds(381, 324, 97, 23);
+		contentPane.add(lblNewLabel_11);
+		
+		JLabel label_1 = new JLabel("종료");
+		label_1.setHorizontalAlignment(SwingConstants.CENTER);
+		label_1.setBounds(381, 404, 97, 18);
+		contentPane.add(label_1);
+		
+		JLabel lblNewLabel_12 = new JLabel("L1");
+		lblNewLabel_12.setBounds(12, 127, 44, 15);
+		contentPane.add(lblNewLabel_12);
+		
+		textField = new JTextField();
+		textField.setBounds(68, 124, 198, 21);
+		contentPane.add(textField);
+		textField.setColumns(10);
+		
+		JButton btnNewButton_15 = new JButton("선택");
+		btnNewButton_15.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(null!=list.getSelectedValue()) {
+					textField.setText(list.getSelectedValue().toString());
+				}
+				System.out.println(list.getSelectedValue());
+			}
+		});
+		btnNewButton_15.setBounds(278, 123, 97, 23);
+		contentPane.add(btnNewButton_15);
+		
+		textField_2 = new JTextField();
+		textField_2.setBounds(68, 201, 198, 21);
+		contentPane.add(textField_2);
+		textField_2.setColumns(10);
+		
+		JLabel lblNewLabel_13 = new JLabel("L2");
+		lblNewLabel_13.setBounds(12, 204, 44, 15);
+		contentPane.add(lblNewLabel_13);
+		
+		JButton btnNewButton_16 = new JButton("선택");
+		btnNewButton_16.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(null!=list.getSelectedValue()) {
+					textField_2.setText(list.getSelectedValue().toString());
+				}
+				System.out.println(list.getSelectedValue());
+			}
+		});
+		btnNewButton_16.setBounds(278, 200, 97, 23);
+		contentPane.add(btnNewButton_16);
+		
+		JButton btnNewButton_17 = new JButton("선택");
+		btnNewButton_17.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(null!=list.getSelectedValue()) {
+					textField_3.setText(list.getSelectedValue().toString());
+				}
+				System.out.println(list.getSelectedValue());
+			}
+		});
+		btnNewButton_17.setBounds(278, 278, 97, 23);
+		contentPane.add(btnNewButton_17);
+		
+		textField_3 = new JTextField();
+		textField_3.setBounds(68, 279, 198, 21);
+		contentPane.add(textField_3);
+		textField_3.setColumns(10);
+		
+		JLabel lblNewLabel_14 = new JLabel("L3");
+		lblNewLabel_14.setBounds(12, 282, 44, 15);
+		contentPane.add(lblNewLabel_14);
+		
+		JButton btnNewButton_18 = new JButton("선택");
+		btnNewButton_18.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(null!=list.getSelectedValue()) {
+					textField_4.setText(list.getSelectedValue().toString());
+				}
+				System.out.println(list.getSelectedValue());
+			}
+		});
+		btnNewButton_18.setBounds(278, 356, 97, 23);
+		contentPane.add(btnNewButton_18);
+		
+		textField_4 = new JTextField();
+		textField_4.setBounds(68, 357, 198, 21);
+		contentPane.add(textField_4);
+		textField_4.setColumns(10);
+		
+		JLabel lblL = new JLabel("L4");
+		lblL.setBounds(12, 360, 44, 15);
+		contentPane.add(lblL);
+		
+		JButton btnNewButton_19 = new JButton("소켓시작");
+		btnNewButton_19.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				soket();
+			}
+		});
+		btnNewButton_19.setBounds(381, 63, 97, 23);
+		contentPane.add(btnNewButton_19);
+		
+		JButton btnNewButton_20 = new JButton("소켓종료");
+		btnNewButton_20.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+					try {
+						if(server!=null) {
+							server.close();
+							server = null;
+						}
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+			}
+		});
+		btnNewButton_20.setBounds(381, 94, 97, 23);
+		contentPane.add(btnNewButton_20);
 	}
+	
+	ServerSocket server;
+	
+	public void soket() {
+		
+		if(server==null) {
+
+			new Thread(new Runnable() {
+
+		        @Override
+		        public void run() {
+		        	
+		    		try {
+
+			    		//자동 close
+			        	server = new ServerSocket();
+		    			
+		    			// 서버 초기화
+		    			InetSocketAddress ipep = new InetSocketAddress(9999);
+		    			server.bind(ipep);
+
+		    			System.out.println("Initialize complate");
+		    			
+		    			while (true) {
+
+		    				// LISTEN 대기
+		    				Socket client = server.accept();
+
+		    				System.out.println("Connection");
+
+		    				InputStream reciever = client.getInputStream();
+
+		    				//서버로부터 데이터 받기
+		                    //11byte
+		                    byte[] data = new byte[11];
+		                    reciever.read(data,0,11);
+
+		                    //수신메시지 출력
+		                    String message = new String(data);
+		    				System.out.println(message);
+		    				Lstart(message.trim());
+		    				
+		    				reciever.close();
+		    				
+		    				client.close();
+		    				
+		    			}
+		    			
+		    		} catch (Throwable e) {
+		    			e.printStackTrace();
+		    		}
+		    		
+		        }
+		        
+		    }).start();
+			
+		}
+		
+	}
+	
+	public void Lstart(String msg) {
+		if("app_log".equals(msg)) {
+			if(!"".equals(textField.getText())&&!"".equals(txtShellInputTap.getText())) {
+				start(textField.getText(),txtShellInputTap.getText());
+			}
+		} else if("app_log_2".equals(msg)) {
+			if(!"".equals(textField_2.getText())&&!"".equals(txtShellInputTap_1.getText())) {
+				start(textField_2.getText(),txtShellInputTap_1.getText());
+			}
+		} else if("app_log_3".equals(msg)) {
+			if(!"".equals(textField_3.getText())&&!"".equals(txtShellInputTap_2.getText())) {
+				start(textField_3.getText(),txtShellInputTap_2.getText());
+			}
+		} else if("app_log_4".equals(msg)) {
+			System.out.println("app_log_4>>>"+textField_4.getText()+txtShellInputTap_3.getText());
+			if(!"".equals(textField_4.getText())&&!"".equals(txtShellInputTap_3.getText())) {
+				start(textField_4.getText(),txtShellInputTap_3.getText());
+			}
+		}
+	}
+	
 }
