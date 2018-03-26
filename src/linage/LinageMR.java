@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
@@ -710,25 +711,37 @@ public class LinageMR extends JFrame {
 		    			while (true) {
 
 		    				// LISTEN 대기
-		    				Socket client = server.accept();
+		    				Socket s = server.accept();
 
 		    				System.out.println("Connection");
-
-		    				InputStream reciever = client.getInputStream();
-
-		    				//서버로부터 데이터 받기
-		                    //11byte
-		                    byte[] data = new byte[11];
-		                    reciever.read(data,0,11);
-
-		                    //수신메시지 출력
-		                    String message = new String(data);
-		    				System.out.println(message);
-		    				Lstart(message.trim());
 		    				
-		    				reciever.close();
-		    				
-		    				client.close();
+		    				InputStream in = s.getInputStream();;
+		                    BufferedReader br = new BufferedReader(new InputStreamReader(in));;
+		         
+		                    try {
+		        				String line = null;
+		        				while((line = br.readLine()) != null){
+		        					System.out.println(line.trim());
+		        					Lstart(line.trim());
+		        				}
+		        			} catch(InterruptedIOException e) {
+		           	      		e.printStackTrace();
+		        			} catch(Exception e){
+		        				e.printStackTrace();
+		        			} finally {
+		        				if (in != null) {
+		        					in.close();
+		        					in = null;
+		        				}
+		        				if (br != null) {
+		        					br.close();
+		        					br = null;
+		        				}
+		        	            if (s != null) {
+		        	            	s.close();
+		        	            	s = null;
+		        	            }
+		        			}
 		    				
 		    			}
 		    			
