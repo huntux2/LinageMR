@@ -23,7 +23,9 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.awt.event.ActionEvent;
@@ -53,6 +55,7 @@ public class LinageMR extends JFrame {
 	public boolean flag_first = true;
 	public boolean flag_end = false;
 	public boolean flag_tread = false;
+	public boolean flag_tread_time = false;
 
 	/**
 	 * Launch the application.
@@ -169,9 +172,24 @@ public class LinageMR extends JFrame {
 			
 		}
 	}
-	
 	public void start(String devices, String shell) {
-		System.out.println("실행:devices:"+devices+" "+"shell:"+shell);
+		if(flag_tread_time) {
+			return;
+		}
+		flag_tread_time = true;
+		Timer mti = new Timer();
+		TimerTask mta = new TimerTask() {
+			@Override
+			public void run() {
+				flag_tread_time = false;
+				System.out.println("실행:flag_tread_time:"+flag_tread_time);
+			}
+		};
+		mti.schedule(mta, 1500);
+		Date today = new Date();
+	    SimpleDateFormat date = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss");
+	    System.out.println("Date: "+date.format(today));
+		System.out.println(date.format(today)+" "+"실행:devices:"+devices+" "+"shell:"+shell);
 		String command = txtAdb.getText();
 		command += " "+"-s"+" "+devices;
 		command += " "+shell;
@@ -480,7 +498,7 @@ public class LinageMR extends JFrame {
 		txtstoragesdcardapplogtxt_2.setColumns(10);
 		
 		txtShellInputTap_3 = new JTextField();
-		txtShellInputTap_3.setText("shell input tap 750 650");
+		txtShellInputTap_3.setText("shell input tap 700 650");
 		txtShellInputTap_3.setBounds(68, 403, 198, 21);
 		contentPane.add(txtShellInputTap_3);
 		txtShellInputTap_3.setColumns(10);
@@ -673,6 +691,7 @@ public class LinageMR extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 					try {
 						if(server!=null) {
+							System.out.println("close complate");
 							server.close();
 							server = null;
 						}
@@ -721,7 +740,9 @@ public class LinageMR extends JFrame {
 		                    try {
 		        				String line = null;
 		        				while((line = br.readLine()) != null){
-		        					System.out.println(line.trim());
+		        					if(!line.contains("app")) {
+		        						System.out.println(line.trim());
+		        					}
 		        					Lstart(line.trim());
 		        				}
 		        			} catch(InterruptedIOException e) {
@@ -771,7 +792,6 @@ public class LinageMR extends JFrame {
 				start(textField_3.getText(),txtShellInputTap_2.getText());
 			}
 		} else if("app_log_4".equals(msg)) {
-			System.out.println("app_log_4>>>"+textField_4.getText()+txtShellInputTap_3.getText());
 			if(!"".equals(textField_4.getText())&&!"".equals(txtShellInputTap_3.getText())) {
 				start(textField_4.getText(),txtShellInputTap_3.getText());
 			}
