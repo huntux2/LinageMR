@@ -186,10 +186,6 @@ public class LinageMR extends JFrame {
 			}
 		};
 		mti.schedule(mta, 1500);
-		Date today = new Date();
-	    SimpleDateFormat date = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss");
-	    System.out.println("Date: "+date.format(today));
-		System.out.println(date.format(today)+" "+"실행:devices:"+devices+" "+"shell:"+shell);
 		String command = txtAdb.getText();
 		command += " "+"-s"+" "+devices;
 		command += " "+shell;
@@ -223,7 +219,9 @@ public class LinageMR extends JFrame {
 		try {
 			if(returnValueFlag) {
 				for (String cmd : commands) {
-					System.out.println(cmd);
+					Date today = new Date();
+				    SimpleDateFormat date = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss");
+					System.out.println(date.format(today)+" "+cmd);
 					Process process = Runtime.getRuntime().exec(cmd);
 					InputStream inputStream = process.getInputStream();
 					InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
