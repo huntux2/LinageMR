@@ -233,6 +233,9 @@ public class LinageMR extends JFrame {
 				}
 			} else {
 				for (String cmd : commands) {
+					Date today = new Date();
+				    SimpleDateFormat date = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss");
+					System.out.println(date.format(today)+" "+cmd);
 					Runtime.getRuntime().exec(cmd);
 				}
 			}
