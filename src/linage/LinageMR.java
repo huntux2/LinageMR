@@ -55,7 +55,10 @@ public class LinageMR extends JFrame {
 	public boolean flag_first = true;
 	public boolean flag_end = false;
 	public boolean flag_tread = false;
-	public boolean flag_tread_time = false;
+	public boolean flag_tread_time1 = false;
+	public boolean flag_tread_time2 = false;
+	public boolean flag_tread_time3 = false;
+	public boolean flag_tread_time4 = false;
 
 	/**
 	 * Launch the application.
@@ -172,17 +175,81 @@ public class LinageMR extends JFrame {
 			
 		}
 	}
-	public void start(String devices, String shell) {
-		if(flag_tread_time) {
+	
+	public void start1(String devices, String shell) {
+		if(flag_tread_time1) {
 			return;
 		}
-		flag_tread_time = true;
+		flag_tread_time1 = true;
 		Timer mti = new Timer();
 		TimerTask mta = new TimerTask() {
 			@Override
 			public void run() {
-				flag_tread_time = false;
-				System.out.println("실행:flag_tread_time:"+flag_tread_time);
+				flag_tread_time1 = false;
+				System.out.println("실행:flag_tread_time1:"+flag_tread_time1);
+			}
+		};
+		mti.schedule(mta, 1500);
+		String command = txtAdb.getText();
+		command += " "+"-s"+" "+devices;
+		command += " "+shell;
+		String[] commands = new String[] { command };
+		excuteCmd(commands, false);
+	}
+	
+	public void start2(String devices, String shell) {
+		if(flag_tread_time2) {
+			return;
+		}
+		flag_tread_time2 = true;
+		Timer mti = new Timer();
+		TimerTask mta = new TimerTask() {
+			@Override
+			public void run() {
+				flag_tread_time2 = false;
+				System.out.println("실행:flag_tread_time2:"+flag_tread_time2);
+			}
+		};
+		mti.schedule(mta, 1500);
+		String command = txtAdb.getText();
+		command += " "+"-s"+" "+devices;
+		command += " "+shell;
+		String[] commands = new String[] { command };
+		excuteCmd(commands, false);
+	}
+	
+	public void start3(String devices, String shell) {
+		if(flag_tread_time3) {
+			return;
+		}
+		flag_tread_time3 = true;
+		Timer mti = new Timer();
+		TimerTask mta = new TimerTask() {
+			@Override
+			public void run() {
+				flag_tread_time3 = false;
+				System.out.println("실행:flag_tread_time3:"+flag_tread_time3);
+			}
+		};
+		mti.schedule(mta, 1500);
+		String command = txtAdb.getText();
+		command += " "+"-s"+" "+devices;
+		command += " "+shell;
+		String[] commands = new String[] { command };
+		excuteCmd(commands, false);
+	}
+	
+	public void start4(String devices, String shell) {
+		if(flag_tread_time4) {
+			return;
+		}
+		flag_tread_time4 = true;
+		Timer mti = new Timer();
+		TimerTask mta = new TimerTask() {
+			@Override
+			public void run() {
+				flag_tread_time4 = false;
+				System.out.println("실행:flag_tread_time4:"+flag_tread_time4);
 			}
 		};
 		mti.schedule(mta, 1500);
@@ -333,7 +400,7 @@ public class LinageMR extends JFrame {
 									System.out.println("정지");
 								} else {
 									if(preNum < num) {
-										start(textField.getText(),txtShellInputTap.getText());
+										start1(textField.getText(),txtShellInputTap.getText());
 									}
 								}
 								preNum = num;
@@ -426,7 +493,7 @@ public class LinageMR extends JFrame {
 		btnNewButton_5.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(!"".equals(textField.getText())) {
-					start(textField.getText(),txtShellInputTap.getText());
+					start1(textField.getText(),txtShellInputTap.getText());
 					try {
 						flag_first = true;
 						flag_end = true;
@@ -512,7 +579,7 @@ public class LinageMR extends JFrame {
 		btnNewButton_7.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(!"".equals(textField_2.getText())) {
-					start(textField_2.getText(), txtShellInputTap_1.getText());
+					start2(textField_2.getText(), txtShellInputTap_1.getText());
 					try {
 						flag_first = true;
 						flag_end = true;
@@ -541,7 +608,7 @@ public class LinageMR extends JFrame {
 		btnNewButton_11.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(!"".equals(textField_3.getText())) {
-					start(textField_3.getText(),txtShellInputTap_2.getText());
+					start3(textField_3.getText(),txtShellInputTap_2.getText());
 					try {
 						flag_first = true;
 						flag_end = true;
@@ -566,7 +633,7 @@ public class LinageMR extends JFrame {
 		btnNewButton_14.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(!"".equals(textField_4.getText())) {
-					start(textField_4.getText(),txtShellInputTap_3.getText());
+					start4(textField_4.getText(),txtShellInputTap_3.getText());
 					try {
 						flag_first = true;
 						flag_end = true;
@@ -782,19 +849,19 @@ public class LinageMR extends JFrame {
 	public void Lstart(String msg) {
 		if("app_log".equals(msg)) {
 			if(!"".equals(textField.getText())&&!"".equals(txtShellInputTap.getText())) {
-				start(textField.getText(),txtShellInputTap.getText());
+				start1(textField.getText(),txtShellInputTap.getText());
 			}
 		} else if("app_log_2".equals(msg)) {
 			if(!"".equals(textField_2.getText())&&!"".equals(txtShellInputTap_1.getText())) {
-				start(textField_2.getText(),txtShellInputTap_1.getText());
+				start2(textField_2.getText(),txtShellInputTap_1.getText());
 			}
 		} else if("app_log_3".equals(msg)) {
 			if(!"".equals(textField_3.getText())&&!"".equals(txtShellInputTap_2.getText())) {
-				start(textField_3.getText(),txtShellInputTap_2.getText());
+				start3(textField_3.getText(),txtShellInputTap_2.getText());
 			}
 		} else if("app_log_4".equals(msg)) {
 			if(!"".equals(textField_4.getText())&&!"".equals(txtShellInputTap_3.getText())) {
-				start(textField_4.getText(),txtShellInputTap_3.getText());
+				start4(textField_4.getText(),txtShellInputTap_3.getText());
 			}
 		}
 	}
