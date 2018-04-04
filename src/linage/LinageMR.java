@@ -278,16 +278,20 @@ public class LinageMR extends JFrame {
 	
 	public String excuteCmd(String[] commands, boolean returnValueFlag) {
 		String returnValue = "";
+		Process process = null;
+		InputStream inputStream = null;
+		InputStreamReader inputStreamReader = null;
+		BufferedReader bufferedReader = null;
 		try {
 			if(returnValueFlag) {
 				for (String cmd : commands) {
 					Date today = new Date();
 				    SimpleDateFormat date = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss");
 					System.out.println(date.format(today)+" "+cmd);
-					Process process = Runtime.getRuntime().exec(cmd);
-					InputStream inputStream = process.getInputStream();
-					InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-					BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+					process = Runtime.getRuntime().exec(cmd);
+					inputStream = process.getInputStream();
+					inputStreamReader = new InputStreamReader(inputStream);
+					bufferedReader = new BufferedReader(inputStreamReader);
 					String inputString = null;
 					while ((inputString = bufferedReader.readLine()) != null) {
 						returnValue = inputString;
@@ -304,7 +308,38 @@ public class LinageMR extends JFrame {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			
+			if(bufferedReader!=null) {
+				try {
+					bufferedReader.close();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			if(inputStreamReader!=null) {
+				try {
+					inputStreamReader.close();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			if(inputStream!=null) {
+				try {
+					inputStream.close();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			if(process!=null) {
+				try {
+					process.destroy();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
 		return returnValue;
 	}
@@ -766,6 +801,32 @@ public class LinageMR extends JFrame {
 		});
 		btnNewButton_20.setBounds(381, 94, 97, 23);
 		contentPane.add(btnNewButton_20);
+		
+		JButton button_1 = new JButton("캡쳐");
+		button_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						excuteCp();
+					}
+				}).start();
+			}
+		});
+		button_1.setBounds(381, 31, 97, 23);
+		contentPane.add(button_1);
+	}
+	
+	public void excuteCp() {
+		if(!"".equals(txtAdb.getText())) {
+			String command = txtAdb.getText();
+			command += " "+"-s"+" "+textField_1.getText();
+			command += " "+"shell screenrecord --time-limit 1 /sdcard/screenrecord-sample.mp4";
+			String[] commands = new String[] { command };
+			excuteCmd(commands, true);
+			excuteCp();
+		}
 	}
 	
 	ServerSocket server;
@@ -860,5 +921,4 @@ public class LinageMR extends JFrame {
 			}
 		}
 	}
-	
 }
