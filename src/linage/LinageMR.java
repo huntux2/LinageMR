@@ -819,13 +819,16 @@ public class LinageMR extends JFrame {
 	}
 	
 	public void excuteCp() {
-		if(!"".equals(txtAdb.getText())) {
-			String command = txtAdb.getText();
-			command += " "+"-s"+" "+textField_1.getText();
-			command += " "+"shell screenrecord --time-limit 1 /sdcard/screenrecord-sample.mp4";
-			String[] commands = new String[] { command };
-			excuteCmd(commands, true);
-			excuteCp();
+		while(true) {
+			if(!"".equals(txtAdb.getText())) {
+				String command = txtAdb.getText();
+				command += " "+"-s"+" "+textField_1.getText();
+				command += " "+"shell screenrecord --time-limit 1 /sdcard/screenrecord-sample.mp4";
+				String[] commands = new String[] { command };
+				excuteCmd(commands, true);
+			} else {
+				break;
+			}
 		}
 	}
 	
