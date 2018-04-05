@@ -906,7 +906,7 @@ public class LinageMR extends JFrame {
 	}
 	
 	public void Lstart(String msg) {
-		if("app_log".equals(msg)) {
+		if("app_log_1".equals(msg)) {
 			if(!"".equals(textField.getText())&&!"".equals(txtShellInputTap.getText())) {
 				start1(textField.getText(),txtShellInputTap.getText());
 			}
