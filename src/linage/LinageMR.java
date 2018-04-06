@@ -820,7 +820,7 @@ public class LinageMR extends JFrame {
 	
 	public void excuteCp() {
 		while(true) {
-			if(!"".equals(txtAdb.getText())) {
+			if(!"".equals(textField_1.getText())) {
 				String command = txtAdb.getText();
 				command += " "+"-s"+" "+textField_1.getText();
 				command += " "+"shell screenrecord --time-limit 1 /sdcard/screenrecord-sample.mp4";
