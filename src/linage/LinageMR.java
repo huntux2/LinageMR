@@ -861,8 +861,8 @@ public class LinageMR extends JFrame {
 
 		    				System.out.println("Connection");
 		    				
-		    				InputStream in = s.getInputStream();;
-		                    BufferedReader br = new BufferedReader(new InputStreamReader(in));;
+		    				InputStream in = s.getInputStream();
+		                    BufferedReader br = new BufferedReader(new InputStreamReader(in));
 		         
 		                    try {
 		        				String line = null;
