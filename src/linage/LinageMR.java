@@ -10,10 +10,14 @@ import javax.swing.ListSelectionModel;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -823,12 +827,24 @@ public class LinageMR extends JFrame {
 			if(!"".equals(textField_1.getText())) {
 				String command = txtAdb.getText();
 				command += " "+"-s"+" "+textField_1.getText();
-				command += " "+"shell screenrecord --time-limit 1 /sdcard/screenrecord-sample.mp4";
+//				command += " "+"shell screenrecord --time-limit 1 /sdcard/screenrecord-sample.mp4";
+				command += " "+"shell screencap -p /sdcard/screen.png";
 				String[] commands = new String[] { command };
 				excuteCmd(commands, true);
 			} else {
 				break;
 			}
+		}
+	}
+	
+	public void excuteCpOne() {
+		if(!"".equals(textField_1.getText())) {
+			String command = txtAdb.getText();
+			command += " "+"-s"+" "+textField_1.getText();
+//			command += " "+"shell screenrecord --time-limit 1 /sdcard/screenrecord-sample.mp4";
+			command += " "+"shell screencap -p /sdcard/screen.png";
+			String[] commands = new String[] { command };
+			excuteCmd(commands, true);
 		}
 	}
 	
@@ -863,14 +879,22 @@ public class LinageMR extends JFrame {
 		    				
 		    				InputStream in = s.getInputStream();
 		                    BufferedReader br = new BufferedReader(new InputStreamReader(in));
-		         
+		                    PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(s.getOutputStream())), true);
 		                    try {
 		        				String line = null;
 		        				while((line = br.readLine()) != null){
 		        					if(!line.contains("app")) {
-		        						System.out.println(line.trim());
+		        						System.out.println("생성 시작"+" "+line.trim());
+		        						excuteCpOne();
 		        					}
 		        					Lstart(line.trim());
+		        					if(line.contains("app")) {
+		        						System.out.println("빈값");
+		        						out.println("");
+		        					} else {
+		        						System.out.println("파싱 시작");
+		        						out.println("파싱 시작");
+		        					}
 		        				}
 		        			} catch(InterruptedIOException e) {
 		           	      		e.printStackTrace();
@@ -884,6 +908,10 @@ public class LinageMR extends JFrame {
 		        				if (br != null) {
 		        					br.close();
 		        					br = null;
+		        				}
+		        				if (out != null) {
+		        					out.close();
+		        					out = null;
 		        				}
 		        	            if (s != null) {
 		        	            	s.close();
