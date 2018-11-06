@@ -5,6 +5,7 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import javax.swing.JButton;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -25,6 +27,7 @@ import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.awt.event.ActionEvent;
@@ -782,7 +785,27 @@ public class LinageMR extends JFrame {
 		JButton btnNewButton_19 = new JButton("소켓시작");
 		btnNewButton_19.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				soket();
+//				soket();
+				new Thread(new Runnable() {
+			        @Override
+			        public void run() {
+						try {
+							if(server==null) {
+					            server = new ServerSocket(9999);
+					            Socket socket = null;
+					            System.out.println("Server Opend");
+					            while ((socket = server.accept()) != null) {
+									String ip = (((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress()).toString().replace("/", "");
+									endClient(socket);
+					            	System.out.println("접속 ip > "+ip);
+					                new ServerThread(socket).start();
+					            }
+					            server.close();
+							}
+				        } catch (Exception e1) {
+				        }
+			        }
+				}).start();
 			}
 		});
 		btnNewButton_19.setBounds(381, 63, 97, 23);
@@ -849,6 +872,139 @@ public class LinageMR extends JFrame {
 	}
 	
 	ServerSocket server;
+	
+	static List<ConnectionToClient> clients = new ArrayList<>();
+
+	public class ServerThread extends Thread {
+        Socket socket;
+        ConnectionToClient conToClient;
+        ServerThread(Socket socket) {
+            this.socket = socket;
+             conToClient = new ConnectionToClient(socket);
+             clients.add(conToClient); 
+        }
+        public void run() {
+            try {
+                String input = "";
+                while( (input = conToClient.read())!=null){
+                	if(!input.contains("app")) {
+						System.out.println("생성 시작"+" "+input.trim());
+						excuteCpOne();
+					}
+					Lstart(input.trim());
+					if(input.contains("app")) {
+						System.out.println("빈값");
+//						out.println("");
+					} else {
+						System.out.println("파싱 시작");
+//						out.println("파싱 시작");
+					}
+    				String ip = (((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress()).toString().replace("/", "");
+                    System.out.println(ip+" > "+input);
+                    conToClient.write(input);
+                }
+            } catch (Exception e) {
+            }
+        }
+        public void sendToAll(String message){
+            for(ConnectionToClient client :clients){
+                client.write(message);
+            }
+        }
+    }
+    
+    static void endClient(Socket socket) {
+    	try {
+    		PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+//    		System.out.println("--out.checkError():"+out.checkError());
+//			System.out.println("--socket.isConnected():"+socket.isConnected());
+//			System.out.println("--socket.getInputStream().read():"+socket.getInputStream().read());
+    		String ip = (((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress()).toString().replace("/", "");
+//    		System.out.println("clients.size():"+clients.size());
+        	for (int i = 0; i < clients.size(); i++) {
+        		ConnectionToClient client = (ConnectionToClient)clients.get(i);
+        		boolean connected = client.socket.isConnected() && ! client.socket.isClosed();
+        		String ip_sub = (((InetSocketAddress) client.socket.getRemoteSocketAddress()).getAddress()).toString().replace("/", "");
+            	out = new PrintWriter(client.socket.getOutputStream(), true);
+//            	System.out.println("out.checkError():"+out.checkError());
+//				System.out.println("client.socket.isConnected():"+client.socket.isConnected());
+//				System.out.println("client.socket.getInputStream().read():"+client.socket.getInputStream().read());
+//        		if(client.socket.getInputStream().read()==-1) {
+    			if(ip.equals(ip_sub)) {
+            		if(connected) {
+            			try {
+        					client.socket.close();
+        					client.socket = null;
+        				} catch (IOException e) {
+        					// TODO Auto-generated catch block
+        					e.printStackTrace();
+        				}
+            		}
+        		}
+    		}
+        	for (int i = clients.size()-1; i >= 0; i--) {
+        		ConnectionToClient client = (ConnectionToClient)clients.get(i);
+        		if(client.socket==null) {
+        			clients.remove(i);
+        			continue;
+        		}
+        		System.out.println(client.socket);
+        	}
+        	if(clients.size()==0) {
+        		System.out.println(socket);
+        	}
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    	}
+    }
+
+    static class ConnectionToClient {
+        Socket socket;
+        BufferedReader br;
+        ObjectOutputStream oos;
+
+        ConnectionToClient(Socket socket) {
+            this.socket = socket;
+            try {
+                br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                oos = new ObjectOutputStream(socket.getOutputStream());
+            } catch (Exception e) {
+            }
+        }
+        public String read(){
+            try{
+                return br.readLine();
+            }catch(Exception e){
+            	return null;
+            } finally {
+            	if(br!=null) {
+            		/*try {
+						br.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}*/
+            	}
+			}
+        }
+        public void write(Object obj) {
+            try {
+            	System.out.println("전송:"+obj);
+                oos.writeObject(obj);
+                oos.flush();
+            } catch (Exception e) {
+            } finally {
+				if(oos!=null) {
+					/*try {
+						oos.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}*/
+				}
+			}
+        }
+    }
 	
 	public void soket() {
 		
