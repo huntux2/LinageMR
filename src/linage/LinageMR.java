@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
@@ -903,6 +904,24 @@ public class LinageMR extends JFrame {
 			excuteCmd(commands, true);
 		}
 	}
+
+	public void excuteStartService() {
+		if(!"".equals(textField_1.getText())) {
+			String ip = "";
+			try {
+				InetAddress local = InetAddress.getLocalHost();
+				ip = local.getHostAddress();
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			String command = txtAdb.getText();
+			command += " "+"-s"+" "+textField_1.getText();
+			command += " "+"shell am startservice -n mr.linage.com/mr.linage.com.service.MyService --es 'socket_client_ip' '"+ip+"'";
+			String[] commands = new String[] { command };
+			excuteCmd(commands, true);
+		}
+	}
 	
 	ServerSocket server;
 	
@@ -1162,67 +1181,68 @@ public class LinageMR extends JFrame {
     Thread t = null;
     boolean t_break = false;
 	public void startPush() {
-		if(start_push<3) {
+		if(start_push<2) {
 			return;
 		}
 		start_push = 0;
 		System.out.println("startPush");
 //			System.out.println(1);
 		excuteCpOne("");
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		excuteStartService();
+//		try {
+//			Thread.sleep(1000);
+//		} catch (InterruptedException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
 //			System.out.println(2);
-		String apiKey = "AIzaSyAs30NeVQEW7U7SgBpx71rhT3iUMi9Cvgg";
-        URL url;
-		try {
-			url = new URL("https://fcm.googleapis.com/fcm/send");
-	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-	        conn.setDoOutput(true);
-	        conn.setRequestMethod("POST");
-	        conn.setRequestProperty("Content-Type", "application/json");
-	        conn.setRequestProperty("Authorization", "key=" + apiKey);
-
-	        conn.setDoOutput(true);
-	        
-	        // 이걸로 보내면 특정 토큰을 가지고있는 어플에만 알림을 날려준다  위에 둘중에 한개 골라서 날려주자
-	        String aa = null;
-//		        String input = "{\"data\" : {\"content\" : \"내용\", \"title\" : "+aa+"}, \"android\" : {\"priority\" : \"HIGH\"},\"to\":\"fKk5YKahUmk:APA91bFNptX3W60ykhA433cCKerRY9H_1uN4uyOc9P1mVHkOIkkpOVDm3i9dOaNnYEjSNHtu2q4SLV1H-mvHtQ6leQFlffq1zc5LtPhrVjYsc4mynAsW5TJT97NL4kgGACyIfaqewiFn\"}";
-//		        String input = "{\"data\" : {\"content\" : \"내용\", \"title\" : "+aa+"}, \"android\" : {\"priority\" : \"HIGH\"},\"to\":\"c_9Iv122syQ:APA91bEBEjpphtdmE3jbX3RpTNsgyD0B-6l4t9nfUzUY02O0CIu9mddaq2karaurCrl7blPTf18X--dw3h9nGlQmMZyWsk4VqXVjf73z_B-8b3V9b1B08x5WPSR9gU42lMcgUpC1ySgY\"}";
-//		        String input = "{\"data\" : {\"content\" : \"내용\", \"title\" : "+aa+"}, \"to\":\"fKk5YKahUmk:APA91bFNptX3W60ykhA433cCKerRY9H_1uN4uyOc9P1mVHkOIkkpOVDm3i9dOaNnYEjSNHtu2q4SLV1H-mvHtQ6leQFlffq1zc5LtPhrVjYsc4mynAsW5TJT97NL4kgGACyIfaqewiFn\"}";
-//		        String input = "{\"data\" : {\"content\" : \"내용\", \"title\" : "+aa+"}, \"to\":\"c_9Iv122syQ:APA91bEBEjpphtdmE3jbX3RpTNsgyD0B-6l4t9nfUzUY02O0CIu9mddaq2karaurCrl7blPTf18X--dw3h9nGlQmMZyWsk4VqXVjf73z_B-8b3V9b1B08x5WPSR9gU42lMcgUpC1ySgY\"}";
-	        String input = "{\"data\" : {\"content\" : \"내용\", \"title\" : \"타이틀\", \"ip\" : \"172.30.1.4\"}, \"android\" : {\"priority\" : \"high\"},\"to\":\"chS6YgIxm0M:APA91bE24DOz09tfC6y9Q9VIpFlZmWzlCTrtxBEKtxU0JsKOcPsBD84pQEtf_KRoi8JzivGXrgwg75piYx-n_Q5i-ISMz9Pscvy0ALCo-F7R-qrDeAwwGSawYwVRMGE-pZ_F5IRbaExr\"}";
-	        OutputStream os = conn.getOutputStream();
-	        
-	        // 서버에서 날려서 한글 깨지는 사람은 아래처럼  UTF-8로 인코딩해서 날려주자
-	        os.write(input.getBytes("UTF-8"));
-	        os.flush();
-	        os.close();
-
-	        int responseCode = conn.getResponseCode();
-	        System.out.println("\nSending 'POST' request to URL : " + url);
-	        System.out.println("Post parameters : " + input);
-	        System.out.println("Response Code : " + responseCode);
-	        
-	        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-	        String inputLine;
-	        StringBuffer response = new StringBuffer();
-
-	        while ((inputLine = in.readLine()) != null) {
-	            response.append(inputLine);
-	        }
-	        in.close();
-	        // print result
-	        System.out.println(response.toString());
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		String apiKey = "AIzaSyAs30NeVQEW7U7SgBpx71rhT3iUMi9Cvgg";
+//        URL url;
+//		try {
+//			url = new URL("https://fcm.googleapis.com/fcm/send");
+//	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//	        conn.setDoOutput(true);
+//	        conn.setRequestMethod("POST");
+//	        conn.setRequestProperty("Content-Type", "application/json");
+//	        conn.setRequestProperty("Authorization", "key=" + apiKey);
+//
+//	        conn.setDoOutput(true);
+//	        
+//	        // 이걸로 보내면 특정 토큰을 가지고있는 어플에만 알림을 날려준다  위에 둘중에 한개 골라서 날려주자
+//	        String aa = null;
+////		        String input = "{\"data\" : {\"content\" : \"내용\", \"title\" : "+aa+"}, \"android\" : {\"priority\" : \"HIGH\"},\"to\":\"fKk5YKahUmk:APA91bFNptX3W60ykhA433cCKerRY9H_1uN4uyOc9P1mVHkOIkkpOVDm3i9dOaNnYEjSNHtu2q4SLV1H-mvHtQ6leQFlffq1zc5LtPhrVjYsc4mynAsW5TJT97NL4kgGACyIfaqewiFn\"}";
+////		        String input = "{\"data\" : {\"content\" : \"내용\", \"title\" : "+aa+"}, \"android\" : {\"priority\" : \"HIGH\"},\"to\":\"c_9Iv122syQ:APA91bEBEjpphtdmE3jbX3RpTNsgyD0B-6l4t9nfUzUY02O0CIu9mddaq2karaurCrl7blPTf18X--dw3h9nGlQmMZyWsk4VqXVjf73z_B-8b3V9b1B08x5WPSR9gU42lMcgUpC1ySgY\"}";
+////		        String input = "{\"data\" : {\"content\" : \"내용\", \"title\" : "+aa+"}, \"to\":\"fKk5YKahUmk:APA91bFNptX3W60ykhA433cCKerRY9H_1uN4uyOc9P1mVHkOIkkpOVDm3i9dOaNnYEjSNHtu2q4SLV1H-mvHtQ6leQFlffq1zc5LtPhrVjYsc4mynAsW5TJT97NL4kgGACyIfaqewiFn\"}";
+////		        String input = "{\"data\" : {\"content\" : \"내용\", \"title\" : "+aa+"}, \"to\":\"c_9Iv122syQ:APA91bEBEjpphtdmE3jbX3RpTNsgyD0B-6l4t9nfUzUY02O0CIu9mddaq2karaurCrl7blPTf18X--dw3h9nGlQmMZyWsk4VqXVjf73z_B-8b3V9b1B08x5WPSR9gU42lMcgUpC1ySgY\"}";
+//	        String input = "{\"data\" : {\"content\" : \"내용\", \"title\" : \"타이틀\", \"ip\" : \"172.30.1.4\"}, \"android\" : {\"priority\" : \"high\"},\"to\":\"fP7rd_aacng:APA91bFS26OI24X3Ry0HVuEGXHOwv3YSVEokibkkqcMdgW_FjLILoOgRCPdVmhDh-985q31yQxv1727sgmw2WYWeNCAOiVW-N7U5z1XbbmIufNVBDPm9uVsEAYtm-nSY3kOmIQiGcxzm\"}";
+//	        OutputStream os = conn.getOutputStream();
+//	        
+//	        // 서버에서 날려서 한글 깨지는 사람은 아래처럼  UTF-8로 인코딩해서 날려주자
+//	        os.write(input.getBytes("UTF-8"));
+//	        os.flush();
+//	        os.close();
+//
+//	        int responseCode = conn.getResponseCode();
+//	        System.out.println("\nSending 'POST' request to URL : " + url);
+//	        System.out.println("Post parameters : " + input);
+//	        System.out.println("Response Code : " + responseCode);
+//	        
+//	        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+//	        String inputLine;
+//	        StringBuffer response = new StringBuffer();
+//
+//	        while ((inputLine = in.readLine()) != null) {
+//	            response.append(inputLine);
+//	        }
+//	        in.close();
+//	        // print result
+//	        System.out.println(response.toString());
+//		} catch (MalformedURLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 }
