@@ -822,7 +822,7 @@ public class LinageMR extends JFrame {
 								try {
 									Thread.sleep(1000);
 									start_push++;
-									if(start_push>10) {
+									if(start_push>2) {
 										startPush();
 									}
 								} catch (InterruptedException e) {
@@ -1181,7 +1181,7 @@ public class LinageMR extends JFrame {
     Thread t = null;
     boolean t_break = false;
 	public void startPush() {
-		if(start_push<2) {
+		if(start_push<1) {
 			return;
 		}
 		start_push = 0;
