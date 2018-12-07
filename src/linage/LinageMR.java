@@ -130,6 +130,7 @@ public class LinageMR extends JFrame {
 		String returnValue = "";
 		try {
 			String command = txtAdb.getText()+" "+"-s "+e_n+" shell ip addr show wlan0";
+			System.out.println(command);
 			String[] commands = new String[] { command };
 			for (String cmd : commands) {
 				Process process = Runtime.getRuntime().exec(cmd);
@@ -163,7 +164,9 @@ public class LinageMR extends JFrame {
 	public void setPort(String e_n) {
 		try {
 			String command = txtAdb.getText()+" "+"-s "+e_n+" tcpip 5555";
-			Runtime.getRuntime().exec(command);
+			System.out.println(command);
+			Process process = Runtime.getRuntime().exec(command);
+			process.waitFor();
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -174,7 +177,10 @@ public class LinageMR extends JFrame {
 	public void setConnect(String e_n) {
 		try {
 			String command = txtAdb.getText()+" "+"connect "+getIpaddr(e_n);
-			Runtime.getRuntime().exec(command);
+			System.out.println(command);
+			Process process = Runtime.getRuntime().exec(command);
+			process.waitFor();
+			list.setListData(getDevices().toArray());
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -374,7 +380,6 @@ public class LinageMR extends JFrame {
 						setPort(list.getSelectedValue().toString());
 					}
 				}
-				System.out.println(list.getSelectedValue());
 			}
 		});
 		btnNewButton.setBounds(169, 94, 97, 23);
@@ -388,7 +393,6 @@ public class LinageMR extends JFrame {
 						setConnect(list.getSelectedValue().toString());
 					}
 				}
-				System.out.println(list.getSelectedValue());
 			}
 		});
 		button.setBounds(278, 63, 97, 54);
@@ -820,9 +824,9 @@ public class LinageMR extends JFrame {
 									break;
 								}
 								try {
-									Thread.sleep(1000);
+									Thread.sleep(100);
 									start_push++;
-									if(start_push>2) {
+									if(start_push>=5) {
 										startPush();
 									}
 								} catch (InterruptedException e) {
@@ -946,7 +950,7 @@ public class LinageMR extends JFrame {
 //					}
                 	System.out.println(input);
 					Lstart(input.trim());
-					startPush();
+//					startPush();
 					if(input.contains("app")) {
 						System.out.println("빈값");
 //						out.println("");
@@ -1177,13 +1181,13 @@ public class LinageMR extends JFrame {
         }
     }
 	
-    int start_push = 0;
+    float start_push = 0;
     Thread t = null;
     boolean t_break = false;
 	public void startPush() {
-		if(start_push<1) {
-			return;
-		}
+//		if(start_push<0.3) {
+//			return;
+//		}
 		start_push = 0;
 		System.out.println("startPush");
 //			System.out.println(1);
