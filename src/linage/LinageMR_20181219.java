@@ -77,6 +77,7 @@ public class LinageMR_20181219 extends JFrame {
 	private JList list_1;
 	private boolean execute = false;
 	private NewWindow newWindow;
+	private String configFilePath = "C:\\conf\\";
 	private String configFileName = "config.txt";
 
 	/**
@@ -184,6 +185,17 @@ public class LinageMR_20181219 extends JFrame {
 	 */
 	public LinageMR_20181219() {
 		setTitle("YDH 편한 세상");
+
+        File file = new File(configFilePath);
+		if (!file.exists()) {
+			try{
+				file.mkdir();
+				System.out.println("폴더 생성");
+	        } catch(Exception e){
+	        	e.getStackTrace();
+			}        
+	    }
+		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 799, 616);
 		contentPane = new JPanel();
@@ -204,7 +216,7 @@ public class LinageMR_20181219 extends JFrame {
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				JFileChooser jfc = new JFileChooser();
-				jfc.setCurrentDirectory(new File("."));
+				jfc.setCurrentDirectory(new File(configFilePath));
 				jfc.setFileFilter(new FileNameExtensionFilter("EXE File","exe"));
                 jfc.setMultiSelectionEnabled(false);
                 if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -377,7 +389,7 @@ public class LinageMR_20181219 extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if(get_adb_check()&&get_empty_check()) {
 					JFileChooser jfc = new JFileChooser();
-					jfc.setCurrentDirectory(new File("."));
+					jfc.setCurrentDirectory(new File(configFilePath));
 	                jfc.setMultiSelectionEnabled(false);
 	                jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 	                if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -517,7 +529,7 @@ public class LinageMR_20181219 extends JFrame {
 					FileWriter fw = null;
 					try {
 					// 파일 객체 생성
-					File file = new File(configFileName);
+					File file = new File(configFilePath+configFileName);
 					fw = new FileWriter(file);
 					// 파일안에 문자열 쓰기
 					for (int i = 0; i < listModel.size(); i++) {
@@ -582,7 +594,7 @@ public class LinageMR_20181219 extends JFrame {
 					FileWriter fw = null;
 					try {
 					// 파일 객체 생성
-					File file = new File(configFileName);
+					File file = new File(configFilePath+configFileName);
 					fw = new FileWriter(file);
 					// 파일안에 문자열 쓰기
 					for (int i = 0; i < listModel.size(); i++) {
@@ -629,7 +641,7 @@ public class LinageMR_20181219 extends JFrame {
 		button_4.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				JFileChooser jfc = new JFileChooser();
-				jfc.setCurrentDirectory(new File("."));
+				jfc.setCurrentDirectory(new File(configFilePath));
 				jfc.setFileFilter(new FileNameExtensionFilter("TEXT FILES", "txt", "text"));
                 jfc.setMultiSelectionEnabled(false);
                 if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -651,12 +663,12 @@ public class LinageMR_20181219 extends JFrame {
 		button_5.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				JFileChooser jfc = new JFileChooser();
-				jfc.setCurrentDirectory(new File("."));
+				jfc.setCurrentDirectory(new File(configFilePath));
 				jfc.setFileFilter(new FileNameExtensionFilter("TEXT FILES", "txt"));
                 jfc.setMultiSelectionEnabled(false);
                 if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                 	if(jfc.getSelectedFile().getName().endsWith(".txt")||jfc.getSelectedFile().getName().endsWith(".text")) {
-                		File file = new File(jfc.getSelectedFile().getName());
+                		File file = new File(configFilePath+jfc.getSelectedFile().getName());
                 		if(!file.isFile()) {
             		        try {
 								file.createNewFile();
@@ -665,6 +677,7 @@ public class LinageMR_20181219 extends JFrame {
 								e.printStackTrace();
 							}
             		        textField_8.setText(jfc.getSelectedFile().getName());
+            		        setExecuteListData(true);
             	        } else {
                     		JOptionPane.showMessageDialog(null, "이미 존재하는 파일입니다.");
             	        }
@@ -1013,7 +1026,7 @@ public class LinageMR_20181219 extends JFrame {
 		FileWriter fw = null;
 		try {
 			// 파일 객체 생성
-	        File file = new File(configFileName);
+	        File file = new File(configFilePath+configFileName);
 	        if(!file.isFile()) {
 		        file.createNewFile();
 	        }
@@ -1165,7 +1178,7 @@ public class LinageMR_20181219 extends JFrame {
 		FileWriter fw = null;
 		try {
 		// 파일 객체 생성
-		File file = new File(configFileName);
+		File file = new File(configFilePath+configFileName);
 		fw = new FileWriter(file);
 		// 파일안에 문자열 쓰기
 		for (int i = 0; i < listModel.size(); i++) {
@@ -1218,7 +1231,7 @@ public class LinageMR_20181219 extends JFrame {
 		FileWriter fw = null;
 		try {
 		// 파일 객체 생성
-		File file = new File(configFileName);
+		File file = new File(configFilePath+configFileName);
 		fw = new FileWriter(file);
 		// 파일안에 문자열 쓰기
 		for (int i = 0; i < listModel.size(); i++) {
@@ -1258,7 +1271,7 @@ public class LinageMR_20181219 extends JFrame {
 		FileReader fr = null;
 		try {
 			// 파일 객체 생성
-	        File file = new File(configFileName);
+	        File file = new File(configFilePath+configFileName);
 	        if(!file.isFile()) {
 		        file.createNewFile();
 	        }
