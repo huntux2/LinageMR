@@ -1,6 +1,7 @@
 package linage;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -9,6 +10,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import utils.IntegerDocument;
 
 import javax.swing.JLabel;
 import javax.swing.JTextField;
@@ -21,7 +24,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,6 +42,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.awt.event.ActionEvent;
@@ -46,11 +54,13 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 
 public class LinageMR_20181219 extends JFrame {
 
 	private JPanel contentPane;
+	private JPanel panel;
 	private JTextField txtAdb;
 	private JButton button;
 	private JButton btnNewButton_1;
@@ -58,9 +68,16 @@ public class LinageMR_20181219 extends JFrame {
 	private JButton btnNewButton_3;
 	private JButton btnNewButton_4;
 	private JButton btnNewButton_5;
+	private JButton btnNewButton_6;
+	private JButton btnNewButton_11;
+	private JButton btnNewButton_10;
+	private JButton button_2_1;
+	private JButton button_4;
 	private JList list;
-	private boolean excute = false;
+	private JList list_1;
+	private boolean execute = false;
 	private NewWindow newWindow;
+	private String configFileName = "config.txt";
 
 	/**
 	 * Launch the application.
@@ -72,7 +89,8 @@ public class LinageMR_20181219 extends JFrame {
 					LinageMR_20181219 frame = new LinageMR_20181219();
 					frame.setVisible(true);
 					frame.addWindowListener(new WindowAdapter() {
-				        @Override public void windowClosing(WindowEvent e) {
+				        @Override 
+				        public void windowClosing(WindowEvent e) {
 				        	close_soket();
 				            System.exit(0);
 				        }
@@ -91,6 +109,13 @@ public class LinageMR_20181219 extends JFrame {
 	    // 버튼이 눌러지면 만들어지는 새 창을 정의한 클래스
 	    NewWindow(String path) {
 	        setTitle("좌표 선택");
+	        addWindowListener(new WindowAdapter() {
+	        	@Override
+	        	public void windowClosed(WindowEvent e) {
+	        		close_soket();
+	        		System.out.println("ServerSocket is closed!");
+	        	}
+			});
 	        // 주의, 여기서 setDefaultCloseOperation() 정의를 하지 말아야 한다
 	        // 정의하게 되면 새 창을 닫으면 모든 창과 프로그램이 동시에 꺼진다
 	        JPanel NewWindowContainer = new JPanel();
@@ -120,10 +145,8 @@ public class LinageMR_20181219 extends JFrame {
 						new Thread(new Runnable() {
 					        @Override
 					        public void run() {
-								excute = false;
-								excuteStartServerSocket();
-					        	excuteScreencap(list.getSelectedValue().toString());
-					        	excuteStartServiceCC(list.getSelectedValue().toString());
+								execute = false;
+								excuteStartServerSocket(true);
 					        }
 						}).start();
 	            		JOptionPane.showMessageDialog(null, "좌표 및 컬러를 불러오고 있습니다.\n잠시만 기다려주세요.");
@@ -181,6 +204,7 @@ public class LinageMR_20181219 extends JFrame {
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				JFileChooser jfc = new JFileChooser();
+				jfc.setCurrentDirectory(new File("."));
 				jfc.setFileFilter(new FileNameExtensionFilter("EXE File","exe"));
                 jfc.setMultiSelectionEnabled(false);
                 if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -236,7 +260,7 @@ public class LinageMR_20181219 extends JFrame {
 		btnNewButton_2.setBounds(200, 155, 90, 20);
 		contentPane.add(btnNewButton_2);
 		
-		JButton btnNewButton_11 = new JButton("무선해제");
+		btnNewButton_11 = new JButton("무선해제");
 		btnNewButton_11.setBounds(200, 185, 90, 20);
 		btnNewButton_11.addActionListener(new ActionListener() {
 			@Override
@@ -301,8 +325,9 @@ public class LinageMR_20181219 extends JFrame {
 		contentPane.add(lblNewLabel_2);
 		
 		textField = new JTextField();
-		textField.setBounds(115, 40, 40, 20);
+		textField.setDocument(new IntegerDocument());
 		textField.setText(port);
+		textField.setBounds(115, 40, 40, 20);
 		textField.setColumns(10);
 		contentPane.add(textField);
 		
@@ -312,8 +337,8 @@ public class LinageMR_20181219 extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if(get_adb_check()&&get_empty_check()) {
 			    	excuteAllEnabled(false);
-			    	excute = true;
-					excuteStartServerSocket();
+			    	execute = true;
+					excuteStartServerSocket(false);
 				}
 			}
 		});
@@ -323,12 +348,14 @@ public class LinageMR_20181219 extends JFrame {
 		btnNewButton_5.setBounds(15, 535, 80, 20);
 		btnNewButton_5.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				excuteAllEnabled(true);
 				close_soket();
 			}
 		});
 		contentPane.add(btnNewButton_5);
 		
 		textField_1 = new JTextField();
+		textField_1.setDocument(new IntegerDocument());
 		textField_1.setText("0");
 		textField_1.setHorizontalAlignment(SwingConstants.CENTER);
 		textField_1.setBounds(670, 155, 35, 20);
@@ -336,19 +363,21 @@ public class LinageMR_20181219 extends JFrame {
 		contentPane.add(textField_1);
 		
 		textField_2 = new JTextField();
+		textField_2.setDocument(new IntegerDocument());
 		textField_2.setText("0");
 		textField_2.setHorizontalAlignment(SwingConstants.CENTER);
 		textField_2.setBounds(730, 155, 35, 20);
 		textField_2.setColumns(10);
 		contentPane.add(textField_2);
 		
-		JButton btnNewButton_6 = new JButton("RGB 체크");
+		btnNewButton_6 = new JButton("RGB 체크");
 		btnNewButton_6.setBounds(545, 155, 100, 20);
 		btnNewButton_6.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(get_adb_check()&&get_empty_check()) {
 					JFileChooser jfc = new JFileChooser();
+					jfc.setCurrentDirectory(new File("."));
 	                jfc.setMultiSelectionEnabled(false);
 	                jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 	                if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -382,11 +411,12 @@ public class LinageMR_20181219 extends JFrame {
 		scrollPane_1.setBounds(15, 275, 170, 230);
 		contentPane.add(scrollPane_1);
 		
-		JList list_1 = new JList();
+		list_1 = new JList();
 		scrollPane_1.setViewportView(list_1);
+		setExecuteListData(false);
 		
 		JLabel lblNewLabel_10 = new JLabel("명령어 목록");
-		lblNewLabel_10.setBounds(15, 250, 105, 18);
+		lblNewLabel_10.setBounds(15, 250, 70, 20);
 		contentPane.add(lblNewLabel_10);
 		
 		button_1 = new JButton("삭제");
@@ -394,7 +424,11 @@ public class LinageMR_20181219 extends JFrame {
 		button_1.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				if(list_1.getModel().getSize()>0) {
+					delExecuteList();
+				} else {
+					JOptionPane.showMessageDialog(null, "삭제할 명령어가 없습니다.");
+				}
 			}
 		});
 		contentPane.add(button_1);
@@ -403,12 +437,17 @@ public class LinageMR_20181219 extends JFrame {
 		lblNewLabel_9_1.setBounds(200, 250, 45, 20);
 		contentPane.add(lblNewLabel_9_1);
 		
-		JButton btnNewButton_10 = new JButton("선택");
+		btnNewButton_10 = new JButton("선택");
 		btnNewButton_10.setBounds(105, 510, 80, 20);
 		btnNewButton_10.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				String fullValue = (String)list_1.getSelectedValue();
+				if(fullValue!=null&&!"".equals(fullValue)) {
+					getExecute();
+				} else {
+					JOptionPane.showMessageDialog(null, "데이터를 선택해주세요.");
+				}
 			}
 		});
 		contentPane.add(btnNewButton_10);
@@ -448,10 +487,199 @@ public class LinageMR_20181219 extends JFrame {
 		textField_16.setColumns(10);
 		textField_16.setBounds(730, 185, 35, 20);
 		contentPane.add(textField_16);
+		
+		JButton btnNewButton_12 = new JButton("↑");
+		btnNewButton_12.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String fullValue = (String)list_1.getSelectedValue();
+				if(fullValue!=null&&!"".equals(fullValue)) {
+					int index = list_1.getSelectedIndex();
+					if(index<=0) {
+						return;
+					}
+					DefaultListModel defaultListModel = (DefaultListModel<String>)list_1.getModel();
+					List list = new ArrayList<String>();
+					for (int i = 0; i < defaultListModel.getSize(); i++) {
+						String data = defaultListModel.get(i).toString();
+						list.add(data);
+					}
+					Collections.swap(list, index, index-1);
+					DefaultListModel listModel = new DefaultListModel();
+					for (int i = 0; i < list.size(); i++) {
+						String data = list.get(i).toString();
+						listModel.addElement(data);
+					}
+					list_1.setModel(listModel);
+					list_1.setSelectedIndex(index-1);  //
+					list_1.ensureIndexIsVisible(index-1);
+					BufferedReader bufReader = null;
+					FileReader fr = null;
+					FileWriter fw = null;
+					try {
+					// 파일 객체 생성
+					File file = new File(configFileName);
+					fw = new FileWriter(file);
+					// 파일안에 문자열 쓰기
+					for (int i = 0; i < listModel.size(); i++) {
+						if(i!=0) {
+							fw.write("\n");
+						}
+						fw.write(listModel.get(i).toString());
+					}
+					fw.flush();
+					// 객체 닫기
+					    fw.close();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} finally {
+						try {
+							if(bufReader!=null)
+								bufReader.close();
+							if(fr!=null)
+								fr.close();
+							if(fw!=null)
+								fw.close();
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				} else {
+					JOptionPane.showMessageDialog(null, "이동할 명령어가 없습니다.");
+				}
+			}
+		});
+		btnNewButton_12.setBounds(90, 250, 45, 20);
+		contentPane.add(btnNewButton_12);
+		
+		JButton button_3 = new JButton("↓");
+		button_3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String fullValue = (String)list_1.getSelectedValue();
+				if(fullValue!=null&&!"".equals(fullValue)) {
+					int index = list_1.getSelectedIndex();
+					DefaultListModel defaultListModel = (DefaultListModel<String>)list_1.getModel();
+					if(index>=defaultListModel.getSize()-1) {
+						return;
+					}
+					List list = new ArrayList<String>();
+					for (int i = 0; i < defaultListModel.getSize(); i++) {
+						String data = defaultListModel.get(i).toString();
+						list.add(data);
+					}
+					Collections.swap(list, index, index+1);
+					DefaultListModel listModel = new DefaultListModel();
+					for (int i = 0; i < list.size(); i++) {
+						String data = list.get(i).toString();
+						listModel.addElement(data);
+					}
+					list_1.setModel(listModel);
+					list_1.setSelectedIndex(index+1);  //
+					list_1.ensureIndexIsVisible(index+1);
+					BufferedReader bufReader = null;
+					FileReader fr = null;
+					FileWriter fw = null;
+					try {
+					// 파일 객체 생성
+					File file = new File(configFileName);
+					fw = new FileWriter(file);
+					// 파일안에 문자열 쓰기
+					for (int i = 0; i < listModel.size(); i++) {
+						if(i!=0) {
+							fw.write("\n");
+						}
+						fw.write(listModel.get(i).toString());
+					}
+					fw.flush();
+					// 객체 닫기
+					    fw.close();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} finally {
+						try {
+							if(bufReader!=null)
+								bufReader.close();
+							if(fr!=null)
+								fr.close();
+							if(fw!=null)
+								fw.close();
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				} else {
+					JOptionPane.showMessageDialog(null, "이동할 명령어가 없습니다.");
+				}
+			}
+		});
+		button_3.setBounds(140, 250, 45, 20);
+		contentPane.add(button_3);
+		
+		textField_8 = new JTextField();
+		textField_8.setEditable(false);
+		textField_8.setText(configFileName);
+		textField_8.setBounds(425, 15, 150, 20);
+		contentPane.add(textField_8);
+		textField_8.setColumns(10);
+		
+		button_4 = new JButton("불러오기");
+		button_4.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				JFileChooser jfc = new JFileChooser();
+				jfc.setCurrentDirectory(new File("."));
+				jfc.setFileFilter(new FileNameExtensionFilter("TEXT FILES", "txt", "text"));
+                jfc.setMultiSelectionEnabled(false);
+                if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            		textField_8.setText(jfc.getSelectedFile().getName());
+					setExecuteListData(true);
+				}
+			}
+		});
+		button_4.setBounds(580, 15, 90, 20);
+		contentPane.add(button_4);
+		
+		textField_9 = new JTextField();
+		textField_9.setEditable(false);
+		textField_9.setColumns(10);
+		textField_9.setBounds(200, 15, 150, 20);
+		contentPane.add(textField_9);
+		
+		JButton button_5 = new JButton("파일생성");
+		button_5.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				JFileChooser jfc = new JFileChooser();
+				jfc.setCurrentDirectory(new File("."));
+				jfc.setFileFilter(new FileNameExtensionFilter("TEXT FILES", "txt"));
+                jfc.setMultiSelectionEnabled(false);
+                if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                	if(jfc.getSelectedFile().getName().endsWith(".txt")||jfc.getSelectedFile().getName().endsWith(".text")) {
+                		File file = new File(jfc.getSelectedFile().getName());
+                		if(!file.isFile()) {
+            		        try {
+								file.createNewFile();
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+            		        textField_8.setText(jfc.getSelectedFile().getName());
+            	        } else {
+                    		JOptionPane.showMessageDialog(null, "이미 존재하는 파일입니다.");
+            	        }
+                	} else {
+                		JOptionPane.showMessageDialog(null, "txt 파일만 생성 가능합니다.");
+                	}
+				}
+			}
+		});
+		button_5.setBounds(675, 15, 90, 20);
+		contentPane.add(button_5);
 	}
 
 	public void createExcutePanel() {
-		JPanel panel = new JPanel();
+		panel = new JPanel();
 		panel.setBounds(200, 275, 567, 280);
 		panel.setLayout(null);
 		
@@ -469,85 +697,597 @@ public class LinageMR_20181219 extends JFrame {
 		contentPane.updateUI();
 		
 		ArrayList<Object> createExcuteSubPanelList = new ArrayList<>();
-		createExcuteSubPanel(panel, excutePanel, createExcuteSubPanelList);
+		createExecuteSubPanel(panel, excutePanel, createExcuteSubPanelList);
 		
 		JLabel label = new JLabel("X");
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		label.setBounds(40, 0, 15, 20);
 		excutePanel.add(label);
 		
-		textField_8 = new JTextField();
-		textField_8.setText("0");
-		textField_8.setHorizontalAlignment(SwingConstants.CENTER);
-		textField_8.setColumns(10);
-		textField_8.setBounds(60, 0, 35, 20);
-		excutePanel.add(textField_8);
+		textField_X = new JTextField();
+		textField_X.setDocument(new IntegerDocument());
+		textField_X.setText("0");
+		textField_X.setHorizontalAlignment(SwingConstants.CENTER);
+		textField_X.setColumns(10);
+		textField_X.setBounds(60, 0, 35, 20);
+		excutePanel.add(textField_X);
 		
 		JLabel label_3 = new JLabel("Y");
 		label_3.setHorizontalAlignment(SwingConstants.CENTER);
 		label_3.setBounds(100, 0, 15, 20);
 		excutePanel.add(label_3);
 		
-		textField_9 = new JTextField();
-		textField_9.setText("0");
-		textField_9.setHorizontalAlignment(SwingConstants.CENTER);
-		textField_9.setColumns(10);
-		textField_9.setBounds(115, 0, 35, 20);
-		excutePanel.add(textField_9);
+		textField_Y = new JTextField();
+		textField_Y.setDocument(new IntegerDocument());
+		textField_Y.setText("0");
+		textField_Y.setHorizontalAlignment(SwingConstants.CENTER);
+		textField_Y.setColumns(10);
+		textField_Y.setBounds(115, 0, 35, 20);
+		excutePanel.add(textField_Y);
+		
+		JLabel label_RGB_D = new JLabel("RGB 편차");
+		label_RGB_D.setBounds(170, 0, 65, 20);
+		label_RGB_D.setHorizontalAlignment(SwingConstants.CENTER);
+		excutePanel.add(label_RGB_D);
+		
+		textField_RGB_D = new JTextField();
+		textField_RGB_D.setDocument(new IntegerDocument());
+		textField_RGB_D.setText("0");
+		textField_RGB_D.setBounds(245, 0, 35, 20);
+		textField_RGB_D.setHorizontalAlignment(SwingConstants.CENTER);
+		textField_RGB_D.setColumns(10);
+		excutePanel.add(textField_RGB_D);
 		
 		JButton btnNewButton_9 = new JButton("실행");
 		btnNewButton_9.setBounds(507, 0, 60, 20);
 		btnNewButton_9.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				if(get_adb_check()&&get_empty_check()) {
+					execute = false;
+					excuteStartServerSocket(false);
+		        	excuteScreencap(list.getSelectedValue().toString());
+		        	excuteStartServiceOne(list.getSelectedValue().toString());
+				}
 			}
 		});
 		excutePanel.add(btnNewButton_9);
 		
-		JLabel lblRgb = new JLabel("RGB 편차");
-		lblRgb.setBounds(170, 0, 65, 20);
-		lblRgb.setHorizontalAlignment(SwingConstants.CENTER);
-		excutePanel.add(lblRgb);
-		
-		textField_10 = new JTextField();
-		textField_10.setBounds(245, 0, 35, 20);
-		textField_10.setHorizontalAlignment(SwingConstants.CENTER);
-		textField_10.setText("0");
-		textField_10.setColumns(10);
-		excutePanel.add(textField_10);
-		
-		JButton button_2_1 = new JButton("조건추가");
+		button_2_1 = new JButton("조건추가");
 		button_2_1.setBounds(477, 5, 90, 20);
 		button_2_1.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				createExcuteSubPanel(panel, excutePanel, createExcuteSubPanelList);
+				createExecuteSubPanel(panel, excutePanel, createExcuteSubPanelList);
 			}
 		});
 		panel.add(button_2_1);
 		
-		textField_11 = new JTextField();
-		textField_11.setToolTipText("명령어 제목");
-		textField_11.setBounds(0, 5, 150, 20);
-		textField_11.setColumns(10);
-		panel.add(textField_11);
+		textField_S = new JTextField();
+		textField_S.setToolTipText("명령어 제목");
+		textField_S.setBounds(0, 5, 150, 20);
+		textField_S.setColumns(10);
+		panel.add(textField_S);
 		
 		btnNewButton_7 = new JButton("목록추가");
 		btnNewButton_7.setBounds(155, 5, 90, 20);
 		btnNewButton_7.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				addExecuteList();
 			}
 		});
 		panel.add(btnNewButton_7);
 		
+		JButton button_3 = new JButton("목록수정");
+		button_3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String fullValue = (String)list_1.getSelectedValue();
+				System.out.println(fullValue);
+				if(fullValue!=null&&!"".equals(fullValue)) {
+					editeExecuteList();
+				} else {
+					JOptionPane.showMessageDialog(null, "수정할 명령어가 없습니다.");
+				}
+			}
+		});
+		button_3.setBounds(250, 5, 90, 20);
+		panel.add(button_3);
+		
 	}
 	
+	public void getExecute() {
+		String fullValue = (String)list_1.getSelectedValue();
+		String S = "";
+		String CX = "";
+		String CY = "";
+		String R = "";
+		String G = "";
+		String B = "";
+		String C = "";
+		String X = "";
+		String Y = "";
+		String RGB_D = "";
+		if(fullValue.split("[|]").length==10) {
+			S = fullValue.split("[|]")[0];
+			CX = fullValue.split("[|]")[1];
+			CY = fullValue.split("[|]")[2];
+			R = fullValue.split("[|]")[3];
+			G = fullValue.split("[|]")[4];
+			B = fullValue.split("[|]")[5];
+			C = fullValue.split("[|]")[6];
+			X = fullValue.split("[|]")[7];
+			Y = fullValue.split("[|]")[8];
+			RGB_D = fullValue.split("[|]")[9];
+		}
+		int cnt = R.split(",").length;
+		int del_cnt = cnt;
+		int total_cnt = 0;
+		Component[] children = panel.getComponents();
+		for (int i=children.length-1;i>=0;i--) {
+			if (children[i] instanceof JPanel) {
+				if("panelA".equals(((JPanel)children[i]).getName())) {
+					total_cnt++;
+				}
+			}
+		}
+		for (int i=children.length-1;i>=0;i--) {
+			if (children[i] instanceof JPanel) {
+				if("panelA".equals(((JPanel)children[i]).getName())) {
+					System.out.println(">>>>>>>>>>>");
+					Component[] childrens = ((JPanel)children[i]).getComponents();
+					if(childrens[childrens.length-1] instanceof JButton) {
+						System.out.println("del_cnt:"+del_cnt);
+						System.out.println("total_cnt:"+total_cnt);
+						if(total_cnt>1) {
+							JButton jb = (JButton)childrens[childrens.length-1];
+							jb.doClick();
+							del_cnt--;
+							total_cnt--;
+						}
+					}
+				}
+			}
+		}
+		for (int i = 0; i < cnt-1; i++) {
+			button_2_1.doClick();
+		}
+		System.out.println("S:"+S);
+		System.out.println("CX:"+CX);
+		System.out.println("CY:"+CY);
+		System.out.println("R:"+R);
+		System.out.println("G:"+G);
+		System.out.println("B:"+B);
+		System.out.println("C:"+C);
+		System.out.println("X:"+X);
+		System.out.println("Y:"+Y);
+		System.out.println("RGB_D:"+RGB_D);
+		System.out.println("fullValue:"+fullValue);
+		textField_S.setText(S);
+		children = panel.getComponents();
+		int cntA = 0;
+		for (int i=0;i<children.length;i++) {
+		    if (children[i] instanceof JPanel) {
+		    	Component[] children_A = ((JPanel)children[i]).getComponents();
+	    		System.out.println(children_A.length);
+				if(children_A.length==14) {
+					if (children_A[2] instanceof JTextField) {
+						((JTextField)children_A[2]).setText(CX.split(",")[cntA]);
+					}
+					if (children_A[4] instanceof JTextField) {
+						((JTextField)children_A[4]).setText(CY.split(",")[cntA]);
+					}
+					if (children_A[6] instanceof JTextField) {
+						((JTextField)children_A[6]).setText(R.split(",")[cntA]);
+					}
+					if (children_A[8] instanceof JTextField) {
+						((JTextField)children_A[8]).setText(G.split(",")[cntA]);
+					}
+					if (children_A[10] instanceof JTextField) {
+						((JTextField)children_A[10]).setText(B.split(",")[cntA]);
+					}
+					if (children_A[11] instanceof JRadioButton) {
+						if("0".equals(C.split(",")[cntA])) {
+							((JRadioButton)children_A[11]).setSelected(true);
+						}
+					}
+					if (children_A[12] instanceof JRadioButton) {
+						if("1".equals(C.split(",")[cntA])) {
+							((JRadioButton)children_A[12]).setSelected(true);
+						}
+					}
+					cntA++;
+				}
+				if(children_A.length==8) {
+					if (children_A[2] instanceof JTextField) {
+						((JTextField)children_A[2]).setText(X);
+					}
+					if (children_A[4] instanceof JTextField) {
+						((JTextField)children_A[4]).setText(Y);
+					}
+					if (children_A[6] instanceof JTextField) {
+						((JTextField)children_A[6]).setText(RGB_D);
+					}
+				}
+		    }
+		}
+	}
 	
-	public void createExcuteSubPanel(JPanel panel, JPanel excutePanel, ArrayList<Object> createExcuteSubPanelList) {
-		if(createExcuteSubPanelList.size()>=8) {
+	public void addExecuteList() {
+		DefaultListModel listModel = new DefaultListModel();
+		String fullValue = "";
+		String S = textField_S.getText();
+		String CX = "";
+		String CY = "";
+		String R = "";
+		String G = "";
+		String B = "";
+		String C = "";
+		String X = "";
+		String Y = "";
+		String RGB_D = "";
+		Component[] children = panel.getComponents();
+		for (int i=0;i<children.length;i++) {
+		    if (children[i] instanceof JPanel) {
+		    	Component[] children_A = ((JPanel)children[i]).getComponents();
+	    		System.out.println(children_A.length);
+				if(children_A.length==14) {
+					if (children_A[2] instanceof JTextField) {
+						if(!"".equals(CX)) {
+							CX += ",";
+						}
+						CX += ((JTextField)children_A[2]).getText();
+					}
+					if (children_A[4] instanceof JTextField) {
+						if(!"".equals(CY)) {
+							CY += ",";
+						}
+						CY += ((JTextField)children_A[4]).getText();
+					}
+					if (children_A[6] instanceof JTextField) {
+						if(!"".equals(R)) {
+							R += ",";
+						}
+						R += ((JTextField)children_A[6]).getText();
+					}
+					if (children_A[8] instanceof JTextField) {
+						if(!"".equals(G)) {
+							G += ",";
+						}
+						G += ((JTextField)children_A[8]).getText();
+					}
+					if (children_A[10] instanceof JTextField) {
+						if(!"".equals(B)) {
+							B += ",";
+						}
+						B += ((JTextField)children_A[10]).getText();
+					}
+					if (children_A[11] instanceof JRadioButton) {
+						if(((JRadioButton)children_A[11]).isSelected()) {
+							if(!"".equals(C)) {
+								C += ",";
+							}
+							C += "0";
+						}
+					}
+					if (children_A[12] instanceof JRadioButton) {
+						if(((JRadioButton)children_A[12]).isSelected()) {
+							if(!"".equals(C)) {
+								C += ",";
+							}
+							C += "1";
+						}
+					}
+				}
+				if(children_A.length==8) {
+					if (children_A[2] instanceof JTextField) {
+						X = ((JTextField)children_A[2]).getText();
+					}
+					if (children_A[4] instanceof JTextField) {
+						Y = ((JTextField)children_A[4]).getText();
+					}
+					if (children_A[6] instanceof JTextField) {
+						RGB_D = ((JTextField)children_A[6]).getText();
+					}
+				}
+		    }
+		}
+		fullValue = S+"|"+CX+"|"+CY+"|"+R+"|"+G+"|"+B+"|"+C+"|"+X+"|"+Y+"|"+RGB_D;
+		System.out.println("S:"+S);
+		System.out.println("CX:"+CX);
+		System.out.println("CY:"+CY);
+		System.out.println("R:"+R);
+		System.out.println("G:"+G);
+		System.out.println("B:"+B);
+		System.out.println("C:"+C);
+		System.out.println("X:"+X);
+		System.out.println("Y:"+Y);
+		System.out.println("RGB_D:"+RGB_D);
+		System.out.println("fullValue:"+fullValue);
+		if("".equals(S)) {
+        	JOptionPane.showMessageDialog(null, "명령어를 입력하세요.");
+			return;
+		}
+		BufferedReader bufReader = null;
+		FileReader fr = null;
+		FileWriter fw = null;
+		try {
+			// 파일 객체 생성
+	        File file = new File(configFileName);
+	        if(!file.isFile()) {
+		        file.createNewFile();
+	        }
+	        fr = new FileReader(file);
+	        //입력 버퍼 생성
+            bufReader = new BufferedReader(fr);
+            String line = "";
+            while((line = bufReader.readLine()) != null){
+            	if(!"".equals(line.trim())) {
+                	listModel.addElement(line.trim());
+            	}
+            }
+            //.readLine()은 끝에 
+			System.out.println("경로:"+file.getAbsolutePath());
+			fw = new FileWriter(file);
+			// 파일안에 문자열 쓰기
+			for (int i = 0; i < listModel.size(); i++) {
+				if(i!=0) {
+					fw.write("\n");
+				}
+				fw.write(listModel.get(i).toString());
+			}
+			fw.write("\n");
+            fw.write(fullValue);
+        	if(!"".equals(fullValue.trim())) {
+            	listModel.addElement(fullValue.trim());
+        	}
+            fw.flush();
+            // 객체 닫기
+            fw.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				if(bufReader!=null)
+					bufReader.close();
+				if(fr!=null)
+					fr.close();
+				if(fw!=null)
+					fw.close();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		list_1.setModel(listModel);
+	}
+	
+	public void editeExecuteList() {
+		int index = list_1.getSelectedIndex(); //선택된 항목의 인덱스를 가져온다.
+		DefaultListModel listModel = (DefaultListModel<String>)list_1.getModel();
+		String fullValue = "";
+		String S = textField_S.getText();
+		String CX = "";
+		String CY = "";
+		String R = "";
+		String G = "";
+		String B = "";
+		String C = "";
+		String X = "";
+		String Y = "";
+		String RGB_D = "";
+		Component[] children = panel.getComponents();
+		for (int i=0;i<children.length;i++) {
+		    if (children[i] instanceof JPanel) {
+		    	Component[] children_A = ((JPanel)children[i]).getComponents();
+	    		System.out.println(children_A.length);
+				if(children_A.length==14) {
+					if (children_A[2] instanceof JTextField) {
+						if(!"".equals(CX)) {
+							CX += ",";
+						}
+						CX += ((JTextField)children_A[2]).getText();
+					}
+					if (children_A[4] instanceof JTextField) {
+						if(!"".equals(CY)) {
+							CY += ",";
+						}
+						CY += ((JTextField)children_A[4]).getText();
+					}
+					if (children_A[6] instanceof JTextField) {
+						if(!"".equals(R)) {
+							R += ",";
+						}
+						R += ((JTextField)children_A[6]).getText();
+					}
+					if (children_A[8] instanceof JTextField) {
+						if(!"".equals(G)) {
+							G += ",";
+						}
+						G += ((JTextField)children_A[8]).getText();
+					}
+					if (children_A[10] instanceof JTextField) {
+						if(!"".equals(B)) {
+							B += ",";
+						}
+						B += ((JTextField)children_A[10]).getText();
+					}
+					if (children_A[11] instanceof JRadioButton) {
+						if(((JRadioButton)children_A[11]).isSelected()) {
+							if(!"".equals(C)) {
+								C += ",";
+							}
+							C += "0";
+						}
+					}
+					if (children_A[12] instanceof JRadioButton) {
+						if(((JRadioButton)children_A[12]).isSelected()) {
+							if(!"".equals(C)) {
+								C += ",";
+							}
+							C += "1";
+						}
+					}
+				}
+				if(children_A.length==8) {
+					if (children_A[2] instanceof JTextField) {
+						X = ((JTextField)children_A[2]).getText();
+					}
+					if (children_A[4] instanceof JTextField) {
+						Y = ((JTextField)children_A[4]).getText();
+					}
+					if (children_A[6] instanceof JTextField) {
+						RGB_D = ((JTextField)children_A[6]).getText();
+					}
+				}
+		    }
+		}
+		fullValue = S+"|"+CX+"|"+CY+"|"+R+"|"+G+"|"+B+"|"+C+"|"+X+"|"+Y+"|"+RGB_D;
+		System.out.println("S:"+S);
+		System.out.println("CX:"+CX);
+		System.out.println("CY:"+CY);
+		System.out.println("R:"+R);
+		System.out.println("G:"+G);
+		System.out.println("B:"+B);
+		System.out.println("C:"+C);
+		System.out.println("X:"+X);
+		System.out.println("Y:"+Y);
+		System.out.println("RGB_D:"+RGB_D);
+		System.out.println("fullValue:"+fullValue);
+		if("".equals(S)) {
+        	JOptionPane.showMessageDialog(null, "명령어를 입력하세요.");
+			return;
+		}
+		listModel.set(index, fullValue);
+		BufferedReader bufReader = null;
+		FileReader fr = null;
+		FileWriter fw = null;
+		try {
+		// 파일 객체 생성
+		File file = new File(configFileName);
+		fw = new FileWriter(file);
+		// 파일안에 문자열 쓰기
+		for (int i = 0; i < listModel.size(); i++) {
+			if(i!=0) {
+				fw.write("\n");
+			}
+			fw.write(listModel.get(i).toString());
+		}
+		fw.flush();
+		// 객체 닫기
+		    fw.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				if(bufReader!=null)
+					bufReader.close();
+				if(fr!=null)
+					fr.close();
+				if(fw!=null)
+					fw.close();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void delExecuteList() {
+		//삭제 버튼을 눌렀을때
+		int index = list_1.getSelectedIndex(); //선택된 항목의 인덱스를 가져온다.
+		//인덱스는 0부터 시작
+		DefaultListModel listModel = (DefaultListModel<String>)list_1.getModel();
+		listModel.remove(index);  //리스트모델에서 선택된 항목을 지운다.
+		if(index == listModel.getSize()){ //인덱스와 리스트모델의 마지막항목이 같으면
+			index--;      //즉,선택된 인덱스가 리스트의 마지막 항목이었으면
+		}         //인덱스를 -1해서 인덱스를 옮겨준다.
+		if(0<=index) {
+			list_1.setSelectedIndex(index);  //
+			list_1.ensureIndexIsVisible(index);
+		}
+		for (int i = 0; i < listModel.getSize(); i++) {
+			if("".equals(listModel.get(i).toString())) {
+				listModel.remove(i);
+			}
+		}
+		BufferedReader bufReader = null;
+		FileReader fr = null;
+		FileWriter fw = null;
+		try {
+		// 파일 객체 생성
+		File file = new File(configFileName);
+		fw = new FileWriter(file);
+		// 파일안에 문자열 쓰기
+		for (int i = 0; i < listModel.size(); i++) {
+			if(i!=0) {
+				fw.write("\n");
+			}
+			fw.write(listModel.get(i).toString());
+		}
+		fw.flush();
+		// 객체 닫기
+		    fw.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				if(bufReader!=null)
+					bufReader.close();
+				if(fr!=null)
+					fr.close();
+				if(fw!=null)
+					fw.close();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void setExecuteListData(boolean config) {
+		if(config) {
+			System.out.println("파일적용");
+			configFileName = textField_8.getText();
+		}
+		DefaultListModel listModel = new DefaultListModel();
+		BufferedReader bufReader = null;
+		FileReader fr = null;
+		try {
+			// 파일 객체 생성
+	        File file = new File(configFileName);
+	        if(!file.isFile()) {
+		        file.createNewFile();
+	        }
+	        fr = new FileReader(file);
+	        //입력 버퍼 생성
+	        bufReader = new BufferedReader(fr);
+	        String line = "";
+	        while((line = bufReader.readLine()) != null){
+	        	listModel.addElement(line);
+	        }
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				if(bufReader!=null)
+					bufReader.close();
+				if(fr!=null)
+					fr.close();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		list_1.setModel(listModel);
+	}
+	
+	public void createExecuteSubPanel(JPanel panel, JPanel excutePanel, ArrayList<Object> createExcuteSubPanelList) {
+		if(createExcuteSubPanelList.size()>=9) {
     		JOptionPane.showMessageDialog(null, "추가할 수 없습니다.");
 			return;
 		}
@@ -558,83 +1298,92 @@ public class LinageMR_20181219 extends JFrame {
 		JPanel panel_1 = new JPanel();
 		panel_1.setBounds(0, 30+y, 567, 20);
 		panel_1.setLayout(null);
+		panel_1.setName("panelA");
 		
 		JLabel lblNewLabel_7_1 = new JLabel("조건");
 		lblNewLabel_7_1.setBounds(0, 0, 35, 20);
 		lblNewLabel_7_1.setHorizontalAlignment(SwingConstants.LEFT);
 		panel_1.add(lblNewLabel_7_1);
 		
-		JLabel label_1_1 = new JLabel("X");
-		label_1_1.setHorizontalAlignment(SwingConstants.CENTER);
-		label_1_1.setBounds(40, 0, 15, 20);
-		panel_1.add(label_1_1);
+		JLabel label_CX = new JLabel("X");
+		label_CX.setHorizontalAlignment(SwingConstants.CENTER);
+		label_CX.setBounds(40, 0, 15, 20);
+		panel_1.add(label_CX);
 		
-		JTextField textField_3_1 = new JTextField();
-		textField_3_1.setBounds(60, 0, 35, 20);
-		textField_3_1.setHorizontalAlignment(SwingConstants.CENTER);
-		textField_3_1.setColumns(10);
-		textField_3_1.setText("0");
-		panel_1.add(textField_3_1);
+		JTextField textField_CX = new JTextField();
+		textField_CX.setDocument(new IntegerDocument());
+		textField_CX.setText("0");
+		textField_CX.setBounds(60, 0, 35, 20);
+		textField_CX.setHorizontalAlignment(SwingConstants.CENTER);
+		textField_CX.setColumns(10);
+		panel_1.add(textField_CX);
 		
-		JLabel label_2_1 = new JLabel("Y");
-		label_2_1.setHorizontalAlignment(SwingConstants.CENTER);
-		label_2_1.setBounds(100, 0, 15, 20);
-		panel_1.add(label_2_1);
+		JLabel label_CY = new JLabel("Y");
+		label_CY.setHorizontalAlignment(SwingConstants.CENTER);
+		label_CY.setBounds(100, 0, 15, 20);
+		panel_1.add(label_CY);
 		
-		JTextField textField_4_1 = new JTextField();
-		textField_4_1.setBounds(115, 0, 35, 20);
-		textField_4_1.setHorizontalAlignment(SwingConstants.CENTER);
-		textField_4_1.setColumns(10);
-		textField_4_1.setText("0");
-		panel_1.add(textField_4_1);
+		JTextField textField_CY = new JTextField();
+		textField_CY.setDocument(new IntegerDocument());
+		textField_CY.setText("0");
+		textField_CY.setBounds(115, 0, 35, 20);
+		textField_CY.setHorizontalAlignment(SwingConstants.CENTER);
+		textField_CY.setColumns(10);
+		panel_1.add(textField_CY);
 		
-		JLabel lblR_1 = new JLabel("R");
-		lblR_1.setHorizontalAlignment(SwingConstants.CENTER);
-		lblR_1.setBounds(170, 0, 15, 20);
-		panel_1.add(lblR_1);
+		JLabel label_R = new JLabel("R");
+		label_R.setHorizontalAlignment(SwingConstants.CENTER);
+		label_R.setBounds(170, 0, 15, 20);
+		panel_1.add(label_R);
 		
-		JTextField textField_5_1 = new JTextField();
-		textField_5_1.setBounds(185, 0, 35, 20);
-		textField_5_1.setHorizontalAlignment(SwingConstants.CENTER);
-		textField_5_1.setColumns(10);
-		textField_5_1.setText("0");
-		panel_1.add(textField_5_1);
+		JTextField textField_R = new JTextField();
+		textField_R.setDocument(new IntegerDocument());
+		textField_R.setText("0");
+		textField_R.setBounds(185, 0, 35, 20);
+		textField_R.setHorizontalAlignment(SwingConstants.CENTER);
+		textField_R.setColumns(10);
+		panel_1.add(textField_R);
 		
-		JLabel lblG_1 = new JLabel("G");
-		lblG_1.setHorizontalAlignment(SwingConstants.CENTER);
-		lblG_1.setBounds(225, 0, 15, 20);
-		panel_1.add(lblG_1);
+		JLabel label_G = new JLabel("G");
+		label_G.setHorizontalAlignment(SwingConstants.CENTER);
+		label_G.setBounds(225, 0, 15, 20);
+		panel_1.add(label_G);
 		
-		JTextField textField_6_1 = new JTextField();
-		textField_6_1.setBounds(245, 0, 35, 20);
-		textField_6_1.setHorizontalAlignment(SwingConstants.CENTER);
-		textField_6_1.setColumns(10);
-		textField_6_1.setText("0");
-		panel_1.add(textField_6_1);
+		JTextField textField_G = new JTextField();
+		textField_G.setDocument(new IntegerDocument());
+		textField_G.setText("0");
+		textField_G.setBounds(245, 0, 35, 20);
+		textField_G.setHorizontalAlignment(SwingConstants.CENTER);
+		textField_G.setColumns(10);
+		panel_1.add(textField_G);
 		
-		JLabel lblB_1 = new JLabel("B");
-		lblB_1.setHorizontalAlignment(SwingConstants.CENTER);
-		lblB_1.setBounds(285, 0, 15, 20);
-		panel_1.add(lblB_1);
+		JLabel label_B = new JLabel("B");
+		label_B.setHorizontalAlignment(SwingConstants.CENTER);
+		label_B.setBounds(285, 0, 15, 20);
+		panel_1.add(label_B);
 		
-		JTextField textField_7_1 = new JTextField();
-		textField_7_1.setBounds(305, 0, 35, 20);
-		textField_7_1.setHorizontalAlignment(SwingConstants.CENTER);
-		textField_7_1.setColumns(10);
-		textField_7_1.setText("0");
-		panel_1.add(textField_7_1);
+		JTextField textField_B = new JTextField();
+		textField_B.setDocument(new IntegerDocument());
+		textField_B.setText("0");
+		textField_B.setBounds(305, 0, 35, 20);
+		textField_B.setHorizontalAlignment(SwingConstants.CENTER);
+		textField_B.setColumns(10);
+		panel_1.add(textField_B);
 
 		ButtonGroup buttonGroup = new ButtonGroup();
-		JRadioButton rdbtnNewRadioButton = new JRadioButton("참");
-		rdbtnNewRadioButton.setBounds(355, 0, 43, 20);
-		rdbtnNewRadioButton.setSelected(true);
-		buttonGroup.add(rdbtnNewRadioButton);
-		panel_1.add(rdbtnNewRadioButton);
 		
-		JRadioButton radioButton = new JRadioButton("거짓");
-		radioButton.setBounds(395, 0, 62, 20);
-		buttonGroup.add(radioButton);
-		panel_1.add(radioButton);
+		JRadioButton rdbtnNewRadioButton_T = new JRadioButton("참");
+		rdbtnNewRadioButton_T.setActionCommand("0");
+		rdbtnNewRadioButton_T.setBounds(355, 0, 43, 20);
+		rdbtnNewRadioButton_T.setSelected(true);
+		buttonGroup.add(rdbtnNewRadioButton_T);
+		panel_1.add(rdbtnNewRadioButton_T);
+		
+		JRadioButton rdbtnNewRadioButton_F = new JRadioButton("거짓");
+		rdbtnNewRadioButton_T.setActionCommand("1");
+		rdbtnNewRadioButton_F.setBounds(395, 0, 62, 20);
+		buttonGroup.add(rdbtnNewRadioButton_F);
+		panel_1.add(rdbtnNewRadioButton_F);
 		
 		JButton btnNewButton_8_1 = new JButton("삭제");
 		btnNewButton_8_1.setBounds(507, 0, 60, 20);
@@ -820,7 +1569,7 @@ public class LinageMR_20181219 extends JFrame {
 	
 	public void setConnect(String select_device) {
 		try {
-			String command = txtAdb.getText()+" "+"connect "+getIpaddr(select_device);
+			String command = txtAdb.getText()+" "+"connect "+getIpaddr(select_device)+":5555";
 			String[] commands = new String[] { command };
 			commands = new String[] { command };
 			String msg = excuteCmd(commands,true);
@@ -906,13 +1655,13 @@ public class LinageMR_20181219 extends JFrame {
         String msg = excuteCmd(commands,true);
         if(msg.contains("pulled")) {
 //        	JOptionPane.showMessageDialog(null, "캡쳐완료");
-        	if(newWindow==null) {
+//        	if(newWindow==null) {
             	newWindow = new NewWindow(saveFilePath+"/screencap-sample.png"); // 클래스 newWindow를 새로 만들어낸다
-        	} else {
-        		newWindow.imageIcon = new ImageIcon(saveFilePath+"/screencap-sample.png");
-        		newWindow.imageIcon.getImage().flush();
-        		newWindow.newLabel.setIcon(newWindow.imageIcon);
-        	}
+//        	} else {
+//        		newWindow.imageIcon = new ImageIcon(saveFilePath+"/screencap-sample.png");
+//        		newWindow.imageIcon.getImage().flush();
+//        		newWindow.newLabel.setIcon(newWindow.imageIcon);
+//        	}
         } else {
         	JOptionPane.showMessageDialog(null, "캡쳐실패");
         }
@@ -1015,13 +1764,15 @@ public class LinageMR_20181219 extends JFrame {
 	private JButton btnNewButton_8;
 	private JLabel lblNewLabel_8;
 	private JLabel lblNewLabel_9;
-	private JTextField textField_8;
-	private JTextField textField_9;
-	private JTextField textField_10;
+	private JTextField textField_X;
+	private JTextField textField_Y;
+	private JTextField textField_RGB_D;
 	private JTextField textField_12;
 	private JTextField textField_14;
 	private JTextField textField_16;
-	private JTextField textField_11;
+	private JTextField textField_S;
+	private JTextField textField_8;
+	private JTextField textField_9;
 	public class ServerThread extends Thread {
         Socket socket;
         ConnectionToClient conToClient;
@@ -1035,7 +1786,6 @@ public class LinageMR_20181219 extends JFrame {
             try {
                 String input = "";
                 while( (input = conToClient.read())!=null){
-                	System.out.println(input);
                 	if(input.contains("R:")&&input.contains("G:")&&input.contains("B:")) {
                     	int R = Integer.parseInt(input.split(",")[1].split(":")[1]);
                     	int G = Integer.parseInt(input.split(",")[2].split(":")[1]);
@@ -1046,7 +1796,13 @@ public class LinageMR_20181219 extends JFrame {
                 		textField_14.setText(String.valueOf(G));
                 		textField_16.setText(String.valueOf(B));
                 	}
-					Lstart(input.trim());
+                	if(input.trim().contains("|")) {
+                		String x = input.trim().split("[|]")[0];
+                		String y = input.trim().split("[|]")[1];
+                		System.out.println("input x:"+x);
+                		System.out.println("input y:"+y);
+    					Lstart(list.getSelectedValue().toString(), x, y);
+                	}
 					if(input.contains("app")) {
 						System.out.println("빈값");
 					} else {
@@ -1130,10 +1886,10 @@ public class LinageMR_20181219 extends JFrame {
                 oos.writeObject(obj);
                 oos.flush();
             } catch (Exception e) {
-            	e.printStackTrace();
+            	//e.printStackTrace();
             } finally {
-            	excuteCallApp(excute);
-            	if(!excute) {
+            	excuteCallApp(execute);
+            	if(!execute) {
             		close_soket();
             	}
 			}
@@ -1151,7 +1907,7 @@ public class LinageMR_20181219 extends JFrame {
 		}
 	}
 	
-	public void excuteStartServerSocket() {
+	public void excuteStartServerSocket(boolean cap) {
 		new Thread(new Runnable() {
 	        @Override
 	        public void run() {
@@ -1162,7 +1918,14 @@ public class LinageMR_20181219 extends JFrame {
 			            server = new ServerSocket(Integer.parseInt(textField.getText()));
 			            Socket socket = null;
 			            System.out.println("Server Opend");
-			            excuteCallApp(excute);
+			            if(cap) {
+							System.out.println("1");
+				        	excuteScreencap(list.getSelectedValue().toString());
+				        	System.out.println("2");
+				        	excuteStartServiceCC(list.getSelectedValue().toString());
+				        	System.out.println("3");
+			            }
+			            excuteCallApp(execute);
 			            while ((socket = server.accept()) != null) {
 							String ip = (((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress()).toString().replace("/", "");
 							endClient(socket);
@@ -1182,35 +1945,185 @@ public class LinageMR_20181219 extends JFrame {
 	}
     
     public void excuteStartService(String select_device) {
-			port = textField.getText();
-			String command = txtAdb.getText();
-			command += " "+"-s"+" "+select_device;
-			command += " "+"shell am startforegroundservice -n mr.linage.com/mr.linage.com.service.MyService ";
-			command += "--es 'socket_server_ip' '"+ip+"' ";
-			command += "--es 'socket_server_port' '"+port+"' ";
-			command += "--es 'type' 'action' ";
-			command += "--es 'action_x' '"+textField_3.getText()+"' ";
-			command += "--es 'action_y' '"+textField_4.getText()+"' ";
-			command += "--es 'action_r' '"+textField_5.getText()+"' ";
-			command += "--es 'action_b' '"+textField_6.getText()+"' ";
-			command += "--es 'action_g' '"+textField_7.getText()+"' ";
-			String[] commands = new String[] { command };
-			String log = excuteCmd(commands, true);
-			System.out.println(log);
+		ArrayList al = new ArrayList<String>();
+    	DefaultListModel listModel = (DefaultListModel<String>)list_1.getModel();
+    	String fullValue = "";
+		String CX = "";
+		String CY = "";
+		String R = "";
+		String G = "";
+		String B = "";
+		String C = "";
+		String X = "";
+		String Y = "";
+		String RGB_D = "";
+		System.out.println("listModel.getSize():"+listModel.getSize());
+		for (int i = 0; i < listModel.getSize(); i++) {
+			String data = listModel.get(i).toString();
+			if("".equals(data.toString().trim())) {
+				continue;
+			}
+			System.out.println("data:"+data);
+			CX = data.split("[|]")[1].replace(",", "\\,");
+			CY = data.split("[|]")[2].replace(",", "\\,");
+			R = data.split("[|]")[3].replace(",", "\\,");
+			G = data.split("[|]")[4].replace(",", "\\,");
+			B = data.split("[|]")[5].replace(",", "\\,");
+			C = data.split("[|]")[6].replace(",", "\\,");
+			X = data.split("[|]")[7];
+			Y = data.split("[|]")[8];
+			RGB_D = data.split("[|]")[9];
+			fullValue = CX+"|"+CY+"|"+R+"|"+G+"|"+B+"|"+C+"|"+X+"|"+Y+"|"+RGB_D;
+
+			System.out.println("CX:"+CX);
+			System.out.println("CY:"+CY);
+			System.out.println("R:"+R);
+			System.out.println("G:"+G);
+			System.out.println("B:"+B);
+			System.out.println("C:"+C);
+			System.out.println("X:"+X);
+			System.out.println("Y:"+Y);
+			System.out.println("RGB_D:"+RGB_D);
+			System.out.println("fullValue:"+fullValue);
+			
+			al.add(fullValue);
+		}
+		
+		String data_list = al.toString();
+		data_list = data_list.substring(1, data_list.length()-1 );
+
+		port = textField.getText();
+		String command = txtAdb.getText();
+		command += " "+"-s"+" "+select_device;
+		command += " "+"shell am startservice -n mr.linage.com/mr.linage.com.service.MyService ";
+		command += "--es 'socket_server_ip' '"+ip+"' ";
+		command += "--es 'socket_server_port' '"+port+"' ";
+		command += "--es 'data_list' '"+data_list.toString()+"'";
+		String[] commands = new String[] { command };
+		excuteCmd(commands, true);
+		
+		Date today = new Date();
+	    SimpleDateFormat date = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss");
+	    textField_9.setText(date.format(today));
 	}
     
     public void excuteStartServiceCC(String select_device) {
-			port = textField.getText();
-			String command = txtAdb.getText();
-			command += " "+"-s"+" "+select_device;
-			command += " "+"shell am startservice -n mr.linage.com/mr.linage.com.service.MyService ";
-			command += "--es 'socket_server_ip' '"+ip+"' ";
-			command += "--es 'socket_server_port' '"+port+"' ";
-			command += "--es 'type' 'cc' ";
-			command += "--es 'cc_x' '"+textField_1.getText()+"' ";
-			command += "--es 'cc_y' '"+textField_2.getText()+"'";
-			String[] commands = new String[] { command };
-			excuteCmd(commands, true);
+		port = textField.getText();
+		String command = txtAdb.getText();
+		command += " "+"-s"+" "+select_device;
+		command += " "+"shell am startservice -n mr.linage.com/mr.linage.com.service.MyService ";
+		command += "--es 'socket_server_ip' '"+ip+"' ";
+		command += "--es 'socket_server_port' '"+port+"' ";
+		command += "--es 'type' 'cc' ";
+		command += "--es 'cc_x' '"+textField_1.getText()+"' ";
+		command += "--es 'cc_y' '"+textField_2.getText()+"'";
+		String[] commands = new String[] { command };
+		excuteCmd(commands, true);
+	}
+    
+    public void excuteStartServiceOne(String select_device) {
+    	String fullValue = "";
+		String CX = "";
+		String CY = "";
+		String R = "";
+		String G = "";
+		String B = "";
+		String C = "";
+		String X = "";
+		String Y = "";
+		String RGB_D = "";
+		Component[] children = panel.getComponents();
+		for (int i=0;i<children.length;i++) {
+		    if (children[i] instanceof JPanel) {
+		    	Component[] children_A = ((JPanel)children[i]).getComponents();
+	    		System.out.println(children_A.length);
+				if(children_A.length==14) {
+					if (children_A[2] instanceof JTextField) {
+						if(!"".equals(CX)) {
+							CX += "\\,";
+						}
+						CX += ((JTextField)children_A[2]).getText();
+					}
+					if (children_A[4] instanceof JTextField) {
+						if(!"".equals(CY)) {
+							CY += "\\,";
+						}
+						CY += ((JTextField)children_A[4]).getText();
+					}
+					if (children_A[6] instanceof JTextField) {
+						if(!"".equals(R)) {
+							R += "\\,";
+						}
+						R += ((JTextField)children_A[6]).getText();
+					}
+					if (children_A[8] instanceof JTextField) {
+						if(!"".equals(G)) {
+							G += "\\,";
+						}
+						G += ((JTextField)children_A[8]).getText();
+					}
+					if (children_A[10] instanceof JTextField) {
+						if(!"".equals(B)) {
+							B += "\\,";
+						}
+						B += ((JTextField)children_A[10]).getText();
+					}
+					if (children_A[11] instanceof JRadioButton) {
+						if(((JRadioButton)children_A[11]).isSelected()) {
+							if(!"".equals(C)) {
+								C += "\\,";
+							}
+							C += "0";
+						}
+					}
+					if (children_A[12] instanceof JRadioButton) {
+						if(((JRadioButton)children_A[12]).isSelected()) {
+							if(!"".equals(C)) {
+								C += "\\,";
+							}
+							C += "1";
+						}
+					}
+				}
+				if(children_A.length==8) {
+					if (children_A[2] instanceof JTextField) {
+						X = ((JTextField)children_A[2]).getText();
+					}
+					if (children_A[4] instanceof JTextField) {
+						Y = ((JTextField)children_A[4]).getText();
+					}
+					if (children_A[6] instanceof JTextField) {
+						RGB_D = ((JTextField)children_A[6]).getText();
+					}
+				}
+		    }
+		}
+		fullValue = CX+"|"+CY+"|"+R+"|"+G+"|"+B+"|"+C+"|"+X+"|"+Y+"|"+RGB_D;
+		System.out.println("CX:"+CX);
+		System.out.println("CY:"+CY);
+		System.out.println("R:"+R);
+		System.out.println("G:"+G);
+		System.out.println("B:"+B);
+		System.out.println("C:"+C);
+		System.out.println("X:"+X);
+		System.out.println("Y:"+Y);
+		System.out.println("RGB_D:"+RGB_D);
+		System.out.println("fullValue:"+fullValue);
+		ArrayList al = new ArrayList<String>();
+		al.add(fullValue);
+		
+		String data_list = al.toString();
+		data_list = data_list.substring(1, data_list.length()-1 );
+
+		port = textField.getText();
+		String command = txtAdb.getText();
+		command += " "+"-s"+" "+select_device;
+		command += " "+"shell am startservice -n mr.linage.com/mr.linage.com.service.MyService ";
+		command += "--es 'socket_server_ip' '"+ip+"' ";
+		command += "--es 'socket_server_port' '"+port+"' ";
+		command += "--es 'data_list' '"+data_list.toString()+"'";
+		String[] commands = new String[] { command };
+		excuteCmd(commands, true);
 	}
     
     public void excuteCallApp(boolean excute) {
@@ -1222,33 +2135,52 @@ public class LinageMR_20181219 extends JFrame {
     
     public void excuteAllEnabled(boolean flag) {
     	textField.setEnabled(flag);
+    	textField_1.setEnabled(flag);
+    	textField_2.setEnabled(flag);
     	txtAdb.setEnabled(flag);
     	button.setEnabled(flag);
     	btnNewButton_1.setEnabled(flag);
     	btnNewButton_2.setEnabled(flag);
     	btnNewButton_3.setEnabled(flag);
     	btnNewButton_4.setEnabled(flag);
+    	btnNewButton_6.setEnabled(flag);
+    	btnNewButton_11.setEnabled(flag);
+    	btnNewButton_10.setEnabled(flag);
+    	button_1.setEnabled(flag);
+    	button_4.setEnabled(flag);
     	list.setEnabled(flag);
+    	list_1.setEnabled(flag);
+    	Component[] cs = panel.getComponents();
+    	for (int i=0;i<cs.length;i++) {
+    		if(cs[i] instanceof JButton) {
+    			((JButton)cs[i]).setEnabled(flag);
+    		}
+    		if(cs[i] instanceof JTextField) {
+    			((JTextField)cs[i]).setEnabled(flag);
+    		}
+    		if (cs[i] instanceof JPanel) {
+    			Component[] css = ((JPanel)cs[i]).getComponents();
+    			for (int j=0;j<css.length;j++) {
+    				if (css[j] instanceof JRadioButton) {
+    					((JRadioButton)css[j]).setEnabled(flag);
+    				}
+    				if (css[j] instanceof JButton) {
+            			((JButton)css[j]).setEnabled(flag);
+    				}
+    				if (css[j] instanceof JTextField) {
+            			((JTextField)css[j]).setEnabled(flag);
+    				}
+    			}
+    		}
+    	}
     }
     
-    public void Lstart(String msg) {
-    	System.out.println("Lstart:msg:"+msg);
-//		if("app_log_1".equals(msg)) {
-//			if(!"".equals(textField.getText())&&!"".equals(txtShellInputTap.getText())) {
-//				start1(textField.getText(),txtShellInputTap.getText());
-//			}
-//		} else if("app_log_2".equals(msg)) {
-//			if(!"".equals(textField_2.getText())&&!"".equals(txtShellInputTap_1.getText())) {
-//				start2(textField_2.getText(),txtShellInputTap_1.getText());
-//			}
-//		} else if("app_log_3".equals(msg)) {
-//			if(!"".equals(textField_3.getText())&&!"".equals(txtShellInputTap_2.getText())) {
-//				start3(textField_3.getText(),txtShellInputTap_2.getText());
-//			}
-//		} else if("app_log_4".equals(msg)) {
-//			if(!"".equals(textField_4.getText())&&!"".equals(txtShellInputTap_3.getText())) {
-//				start4(textField_4.getText(),txtShellInputTap_3.getText());
-//			}
-//		}
+    public void Lstart(String select_device, String x, String y) {
+    	String command = txtAdb.getText();
+		command += " "+"-s "+select_device;
+		command += " "+"shell input tap "+x+" "+y;
+		String[] commands = new String[] { command };
+		commands = new String[] { command };
+		excuteCmd(commands,true);
 	}
 }
