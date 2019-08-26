@@ -3,8 +3,14 @@ package linage;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.EventQueue;
+import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Transparency;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -24,8 +30,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -39,6 +46,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -53,6 +61,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.JRadioButton;
+import javax.imageio.ImageIO;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
@@ -61,7 +70,20 @@ public class LinageMR_20181219 extends JFrame {
 
 	private JPanel contentPane;
 	private JPanel panel;
+	private JLabel lblNewLabel_5;
 	private JTextField txtAdb;
+	private JTextField textField;
+	private JTextField textField_1;
+	private JTextField textField_2;
+	private JTextField textField_8;
+	private JTextField textField_9;
+	private JTextField textField_12;
+	private JTextField textField_14;
+	private JTextField textField_16;
+	private JTextField textField_X;
+	private JTextField textField_Y;
+	private JTextField textField_S;
+	private JTextField textField_RGB_D;
 	private JButton button;
 	private JButton btnNewButton_1;
 	private JButton btnNewButton_2;
@@ -69,17 +91,24 @@ public class LinageMR_20181219 extends JFrame {
 	private JButton btnNewButton_4;
 	private JButton btnNewButton_5;
 	private JButton btnNewButton_6;
+	private JButton btnNewButton_7;
 	private JButton btnNewButton_11;
 	private JButton btnNewButton_10;
+	private JButton button_1;
 	private JButton button_2_1;
 	private JButton button_4;
 	private JList list;
 	private JList list_1;
 	private boolean execute = false;
 	private NewWindow newWindow;
-	private String configFilePath = "C:\\conf\\";
-	private String configFileName = "config.txt";
-
+	private String ip = "";
+	private String port = "9999";
+	private String configFilePath = "";
+	private String configFileName = "명령어.txt";
+	
+	public static ServerSocket server;
+	public List<ConnectionToClient> clients = new ArrayList<>();
+	
 	/**
 	 * Launch the application.
 	 */
@@ -103,98 +132,19 @@ public class LinageMR_20181219 extends JFrame {
 		});
 	}
 	
-	public class NewWindow extends JFrame {
-		ImageIcon imageIcon;
-		JLabel newLabel;
-        boolean mouse = false;
-	    // 버튼이 눌러지면 만들어지는 새 창을 정의한 클래스
-	    NewWindow(String path) {
-	        setTitle("좌표 선택");
-	        addWindowListener(new WindowAdapter() {
-	        	@Override
-	        	public void windowClosed(WindowEvent e) {
-	        		close_soket();
-	        		System.out.println("ServerSocket is closed!");
-	        	}
-			});
-	        // 주의, 여기서 setDefaultCloseOperation() 정의를 하지 말아야 한다
-	        // 정의하게 되면 새 창을 닫으면 모든 창과 프로그램이 동시에 꺼진다
-	        JPanel NewWindowContainer = new JPanel();
-	        newLabel = new JLabel();
-	        imageIcon = new ImageIcon(path);
-	        imageIcon.getImage().flush();
-	        newLabel.setIcon(imageIcon);
-	        newLabel.setAutoscrolls(true);
-	        MouseAdapter ma = new MouseAdapter() {
-                private Point origin;
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    origin = new Point(e.getPoint());
-                }
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                	if(origin.x==e.getX()&&origin.y==e.getY()) {
-                    	mouse = true;
-                	} else {
-                    	mouse = false;
-                	}
-					if (e.getButton () == MouseEvent.BUTTON1 && mouse) {
-						System.out.println("x:"+e.getX());
-						System.out.println("y:"+e.getY());
-						textField_1.setText(e.getX()+"");
-						textField_2.setText(e.getY()+"");
-						new Thread(new Runnable() {
-					        @Override
-					        public void run() {
-								execute = false;
-								excuteStartServerSocket(true);
-					        }
-						}).start();
-	            		JOptionPane.showMessageDialog(null, "좌표 및 컬러를 불러오고 있습니다.\n잠시만 기다려주세요.");
-					}
-                }
-                @Override
-                public void mouseDragged(MouseEvent e) {
-                    if (origin != null) {
-                        JViewport viewPort = (JViewport) SwingUtilities.getAncestorOfClass(JViewport.class, newLabel);
-                        if (viewPort != null) {
-                            int deltaX = origin.x - e.getX();
-                            int deltaY = origin.y - e.getY();
-                            Rectangle view = viewPort.getViewRect();
-                            view.x += deltaX;
-                            view.y += deltaY;
-                            newLabel.scrollRectToVisible(view);
-                        }
-                    }
-                }
-            };
-	        newLabel.addMouseListener(ma);
-	        newLabel.addMouseMotionListener(ma);
-	        NewWindowContainer.add(newLabel);
-	        JScrollPane jsp = new JScrollPane(NewWindowContainer,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-	        jsp.getVerticalScrollBar().setUnitIncrement(16);
-	        setContentPane(jsp);
-	        setSize(720, 640);
-	        setResizable(true);
-	        setVisible(true);
-	    }
-	}
-	
 	/**
 	 * Create the frame.
 	 */
 	public LinageMR_20181219() {
 		setTitle("YDH 편한 세상");
-
-        File file = new File(configFilePath);
-		if (!file.exists()) {
-			try{
-				file.mkdir();
-				System.out.println("폴더 생성");
-	        } catch(Exception e){
-	        	e.getStackTrace();
-			}        
-	    }
+		
+		try {
+			//현재 파일 위치 세팅
+			configFilePath = new File(LinageMR_20181219.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getParentFile().toString()+"\\";
+		} catch (URISyntaxException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 799, 616);
@@ -348,6 +298,7 @@ public class LinageMR_20181219 extends JFrame {
 		btnNewButton_4.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(get_adb_check()&&get_empty_check()) {
+					popupClose();
 			    	excuteAllEnabled(false);
 			    	execute = true;
 					excuteStartServerSocket(false);
@@ -393,6 +344,7 @@ public class LinageMR_20181219 extends JFrame {
 	                jfc.setMultiSelectionEnabled(false);
 	                jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 	                if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+	                	popupClose();
 	                	excuteDeviceScreenCapImgPull(list.getSelectedValue().toString(), jfc.getSelectedFile().toString());
 					}
 				}
@@ -525,22 +477,21 @@ public class LinageMR_20181219 extends JFrame {
 					list_1.setSelectedIndex(index-1);  //
 					list_1.ensureIndexIsVisible(index-1);
 					BufferedReader bufReader = null;
-					FileReader fr = null;
-					FileWriter fw = null;
+					BufferedWriter bufWriter = null;
 					try {
-					// 파일 객체 생성
-					File file = new File(configFilePath+configFileName);
-					fw = new FileWriter(file);
-					// 파일안에 문자열 쓰기
-					for (int i = 0; i < listModel.size(); i++) {
-						if(i!=0) {
-							fw.write("\n");
+						// 파일 객체 생성
+						File file = new File(configFilePath+configFileName);
+						bufWriter = new BufferedWriter(new FileWriter(file));
+						// 파일안에 문자열 쓰기
+						for (int i = 0; i < listModel.size(); i++) {
+							if(i!=0) {
+								bufWriter.write("\n");
+							}
+							bufWriter.write(listModel.get(i).toString());
 						}
-						fw.write(listModel.get(i).toString());
-					}
-					fw.flush();
-					// 객체 닫기
-					    fw.close();
+						bufWriter.flush();
+						// 객체 닫기
+						bufWriter.close();
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -548,10 +499,8 @@ public class LinageMR_20181219 extends JFrame {
 						try {
 							if(bufReader!=null)
 								bufReader.close();
-							if(fr!=null)
-								fr.close();
-							if(fw!=null)
-								fw.close();
+							if(bufWriter!=null)
+								bufWriter.close();
 						} catch (Exception e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -590,22 +539,21 @@ public class LinageMR_20181219 extends JFrame {
 					list_1.setSelectedIndex(index+1);  //
 					list_1.ensureIndexIsVisible(index+1);
 					BufferedReader bufReader = null;
-					FileReader fr = null;
-					FileWriter fw = null;
+					BufferedWriter bufWriter = null;
 					try {
-					// 파일 객체 생성
-					File file = new File(configFilePath+configFileName);
-					fw = new FileWriter(file);
-					// 파일안에 문자열 쓰기
-					for (int i = 0; i < listModel.size(); i++) {
-						if(i!=0) {
-							fw.write("\n");
+						// 파일 객체 생성
+						File file = new File(configFilePath+configFileName);
+						bufWriter = new BufferedWriter(new FileWriter(file)); 
+						// 파일안에 문자열 쓰기
+						for (int i = 0; i < listModel.size(); i++) {
+							if(i!=0) {
+								bufWriter.write("\n");
+							}
+							bufWriter.write(listModel.get(i).toString());
 						}
-						fw.write(listModel.get(i).toString());
-					}
-					fw.flush();
-					// 객체 닫기
-					    fw.close();
+						bufWriter.flush();
+						// 객체 닫기
+						bufWriter.close();
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -613,10 +561,8 @@ public class LinageMR_20181219 extends JFrame {
 						try {
 							if(bufReader!=null)
 								bufReader.close();
-							if(fr!=null)
-								fr.close();
-							if(fw!=null)
-								fw.close();
+							if(bufWriter!=null)
+								bufWriter.close();
 						} catch (Exception e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -689,6 +635,13 @@ public class LinageMR_20181219 extends JFrame {
 		});
 		button_5.setBounds(675, 15, 90, 20);
 		contentPane.add(button_5);
+	}
+	
+	public void popupClose() {
+		if(newWindow!=null) {
+			newWindow.dispose();
+			newWindow = null;
+		}
 	}
 
 	public void createExcutePanel() {
@@ -1022,17 +975,15 @@ public class LinageMR_20181219 extends JFrame {
 			return;
 		}
 		BufferedReader bufReader = null;
-		FileReader fr = null;
-		FileWriter fw = null;
+		BufferedWriter bufWriter = null;
 		try {
 			// 파일 객체 생성
 	        File file = new File(configFilePath+configFileName);
 	        if(!file.isFile()) {
 		        file.createNewFile();
 	        }
-	        fr = new FileReader(file);
 	        //입력 버퍼 생성
-            bufReader = new BufferedReader(fr);
+            bufReader = new BufferedReader(new FileReader(file));
             String line = "";
             while((line = bufReader.readLine()) != null){
             	if(!"".equals(line.trim())) {
@@ -1041,22 +992,22 @@ public class LinageMR_20181219 extends JFrame {
             }
             //.readLine()은 끝에 
 			System.out.println("경로:"+file.getAbsolutePath());
-			fw = new FileWriter(file);
+			bufWriter = new BufferedWriter(new FileWriter(file)); 
 			// 파일안에 문자열 쓰기
 			for (int i = 0; i < listModel.size(); i++) {
 				if(i!=0) {
-					fw.write("\n");
+					bufWriter.write("\n");
 				}
-				fw.write(listModel.get(i).toString());
+				bufWriter.write(listModel.get(i).toString());
 			}
-			fw.write("\n");
-            fw.write(fullValue);
+			bufWriter.write("\n");
+			bufWriter.write(fullValue);
         	if(!"".equals(fullValue.trim())) {
             	listModel.addElement(fullValue.trim());
         	}
-            fw.flush();
+        	bufWriter.flush();
             // 객체 닫기
-            fw.close();
+        	bufWriter.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1064,10 +1015,8 @@ public class LinageMR_20181219 extends JFrame {
 			try {
 				if(bufReader!=null)
 					bufReader.close();
-				if(fr!=null)
-					fr.close();
-				if(fw!=null)
-					fw.close();
+				if(bufWriter!=null)
+					bufWriter.close();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1174,22 +1123,21 @@ public class LinageMR_20181219 extends JFrame {
 		}
 		listModel.set(index, fullValue);
 		BufferedReader bufReader = null;
-		FileReader fr = null;
-		FileWriter fw = null;
+		BufferedWriter bufWriter = null;
 		try {
-		// 파일 객체 생성
-		File file = new File(configFilePath+configFileName);
-		fw = new FileWriter(file);
-		// 파일안에 문자열 쓰기
-		for (int i = 0; i < listModel.size(); i++) {
-			if(i!=0) {
-				fw.write("\n");
+			// 파일 객체 생성
+			File file = new File(configFilePath+configFileName);
+			bufWriter = new BufferedWriter(new FileWriter(file));
+			// 파일안에 문자열 쓰기
+			for (int i = 0; i < listModel.size(); i++) {
+				if(i!=0) {
+					bufWriter.write("\n");
+				}
+				bufWriter.write(listModel.get(i).toString());
 			}
-			fw.write(listModel.get(i).toString());
-		}
-		fw.flush();
-		// 객체 닫기
-		    fw.close();
+			bufWriter.flush();
+			// 객체 닫기
+			bufWriter.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1197,10 +1145,8 @@ public class LinageMR_20181219 extends JFrame {
 			try {
 				if(bufReader!=null)
 					bufReader.close();
-				if(fr!=null)
-					fr.close();
-				if(fw!=null)
-					fw.close();
+				if(bufWriter!=null)
+					bufWriter.close();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1227,22 +1173,21 @@ public class LinageMR_20181219 extends JFrame {
 			}
 		}
 		BufferedReader bufReader = null;
-		FileReader fr = null;
-		FileWriter fw = null;
+		BufferedWriter bufWriter = null;
 		try {
-		// 파일 객체 생성
-		File file = new File(configFilePath+configFileName);
-		fw = new FileWriter(file);
-		// 파일안에 문자열 쓰기
-		for (int i = 0; i < listModel.size(); i++) {
-			if(i!=0) {
-				fw.write("\n");
+			// 파일 객체 생성
+			File file = new File(configFilePath+configFileName);
+			bufWriter = new BufferedWriter(new FileWriter(file));
+			// 파일안에 문자열 쓰기
+			for (int i = 0; i < listModel.size(); i++) {
+				if(i!=0) {
+					bufWriter.write("\n");
+				}
+				bufWriter.write(listModel.get(i).toString());
 			}
-			fw.write(listModel.get(i).toString());
-		}
-		fw.flush();
-		// 객체 닫기
-		    fw.close();
+			bufWriter.flush();
+			// 객체 닫기
+			bufWriter.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1250,10 +1195,8 @@ public class LinageMR_20181219 extends JFrame {
 			try {
 				if(bufReader!=null)
 					bufReader.close();
-				if(fr!=null)
-					fr.close();
-				if(fw!=null)
-					fw.close();
+				if(bufWriter!=null)
+					bufWriter.close();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1517,11 +1460,6 @@ public class LinageMR_20181219 extends JFrame {
 		return flag;
 	}
 	
-	String ip = "";
-	String port = "9999";
-	
-	private JTextField textField;
-	
 	public void setServierIp() {
 		try {
 			InetAddress local = InetAddress.getLocalHost();
@@ -1667,14 +1605,7 @@ public class LinageMR_20181219 extends JFrame {
     	JOptionPane.showMessageDialog(null, "선택하신 경로에 캡쳐 파일이 저장 됩니다.\n저장 완료후 캡쳐 완료/실패 메시지가 뜸니다.");
         String msg = excuteCmd(commands,true);
         if(msg.contains("pulled")) {
-//        	JOptionPane.showMessageDialog(null, "캡쳐완료");
-//        	if(newWindow==null) {
-            	newWindow = new NewWindow(saveFilePath+"/screencap-sample.png"); // 클래스 newWindow를 새로 만들어낸다
-//        	} else {
-//        		newWindow.imageIcon = new ImageIcon(saveFilePath+"/screencap-sample.png");
-//        		newWindow.imageIcon.getImage().flush();
-//        		newWindow.newLabel.setIcon(newWindow.imageIcon);
-//        	}
+        	newWindow = new NewWindow(saveFilePath+"/screencap-sample.png"); // 클래스 newWindow를 새로 만들어낸다
         } else {
         	JOptionPane.showMessageDialog(null, "캡쳐실패");
         }
@@ -1753,39 +1684,6 @@ public class LinageMR_20181219 extends JFrame {
 		excuteCmd(commands, true);
 	}
 	
-	public static ServerSocket server;
-	public List<ConnectionToClient> clients = new ArrayList<>();
-	private JTextField textField_1;
-	private JTextField textField_2;
-	private JLabel lblNewLabel_5;
-	private JLabel lblNewLabel_7;
-	private JLabel label_1;
-	private JTextField textField_3;
-	private JTextField textField_4;
-	private JLabel label_2;
-	private JLabel lblR;
-	private JTextField textField_5;
-	private JLabel lblG;
-	private JTextField textField_6;
-	private JLabel lblB;
-	private JTextField textField_7;
-	private JTextField textField_13;
-	private JButton btnNewButton_7;
-	private JTextField textField_15;
-	private JButton button_1;
-	private JButton button_2;
-	private JButton btnNewButton_8;
-	private JLabel lblNewLabel_8;
-	private JLabel lblNewLabel_9;
-	private JTextField textField_X;
-	private JTextField textField_Y;
-	private JTextField textField_RGB_D;
-	private JTextField textField_12;
-	private JTextField textField_14;
-	private JTextField textField_16;
-	private JTextField textField_S;
-	private JTextField textField_8;
-	private JTextField textField_9;
 	public class ServerThread extends Thread {
         Socket socket;
         ConnectionToClient conToClient;
@@ -1932,11 +1830,8 @@ public class LinageMR_20181219 extends JFrame {
 			            Socket socket = null;
 			            System.out.println("Server Opend");
 			            if(cap) {
-							System.out.println("1");
 				        	excuteScreencap(list.getSelectedValue().toString());
-				        	System.out.println("2");
 				        	excuteStartServiceCC(list.getSelectedValue().toString());
-				        	System.out.println("3");
 			            }
 			            excuteCallApp(execute);
 			            while ((socket = server.accept()) != null) {
@@ -2196,4 +2091,136 @@ public class LinageMR_20181219 extends JFrame {
 		commands = new String[] { command };
 		excuteCmd(commands,true);
 	}
+    
+	public class NewWindow extends JFrame {
+		ImageIcon imageIcon;
+		JLabel newLabel;
+        boolean mouse = false;
+	    // 버튼이 눌러지면 만들어지는 새 창을 정의한 클래스
+	    NewWindow(String path) {
+	        setTitle("좌표 선택");
+	        addWindowListener(new WindowAdapter() {
+	        	@Override
+	        	public void windowClosed(WindowEvent e) {
+	        		close_soket();
+	        		System.out.println("ServerSocket is closed!");
+	        	}
+			});
+	        // 주의, 여기서 setDefaultCloseOperation() 정의를 하지 말아야 한다
+	        // 정의하게 되면 새 창을 닫으면 모든 창과 프로그램이 동시에 꺼진다
+	        JPanel newWindowContainer = new JPanel();
+	        newLabel = new JLabel();
+	        imageIcon = new ImageIcon(path);
+	        imageIcon.getImage().flush();
+	        newLabel.setIcon(imageIcon);
+	        newLabel.setAutoscrolls(true);
+	        MouseAdapter ma = new MouseAdapter() {
+                private Point origin;
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    origin = new Point(e.getPoint());
+                }
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                	if(origin.x==e.getX()&&origin.y==e.getY()) {
+                    	mouse = true;
+                	} else {
+                    	mouse = false;
+                	}
+                	if (e.getButton () == MouseEvent.BUTTON3 && mouse) {
+                		System.out.println("마우스 테스트");
+                		BufferedImage bufferedImage = toBufferedImage(imageIcon.getImage());
+                		imageIcon.setImage(getRotateImage(bufferedImage, 90));
+                		newLabel.setIcon(imageIcon);
+                		newWindowContainer.revalidate();
+                		newWindowContainer.repaint();
+                	}
+					if (e.getButton () == MouseEvent.BUTTON1 && mouse) {
+						System.out.println("x:"+e.getX());
+						System.out.println("y:"+e.getY());
+						textField_1.setText(e.getX()+"");
+						textField_2.setText(e.getY()+"");
+						BufferedImage image = null;  
+					    try {
+					        image = ImageIO.read(new File(path));
+					        Color color = new Color(image.getRGB(e.getX(), e.getY()));   //좌표 선택
+					        int A = color.getBlue();
+							int R = color.getRed();
+							int G = color.getGreen();
+							int B = color.getBlue();
+					        lblNewLabel_5.setBackground(new Color(R, G, B));
+	                    	lblNewLabel_5.setOpaque(true);
+					        textField_12.setText(R+"");
+					        textField_14.setText(G+"");
+					        textField_16.setText(B+"");
+					    } catch (Exception error) {
+					    	error.printStackTrace();
+					    }
+//						new Thread(new Runnable() {
+//					        @Override
+//					        public void run() {
+//								execute = false;
+//								excuteStartServerSocket(true);
+//					        }
+//						}).start();
+//	            		JOptionPane.showMessageDialog(null, "좌표 및 컬러를 불러오고 있습니다.\n잠시만 기다려주세요.");
+					}
+                }
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    if (origin != null) {
+                        JViewport viewPort = (JViewport) SwingUtilities.getAncestorOfClass(JViewport.class, newLabel);
+                        if (viewPort != null) {
+                            int deltaX = origin.x - e.getX();
+                            int deltaY = origin.y - e.getY();
+                            Rectangle view = viewPort.getViewRect();
+                            view.x += deltaX;
+                            view.y += deltaY;
+                            newLabel.scrollRectToVisible(view);
+                        }
+                    }
+                }
+            };
+	        newLabel.addMouseListener(ma);
+	        newLabel.addMouseMotionListener(ma);
+	        newWindowContainer.add(newLabel);
+	        JScrollPane jsp = new JScrollPane(newWindowContainer,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+	        jsp.getVerticalScrollBar().setUnitIncrement(16);
+	        setContentPane(jsp);
+	        setSize(720, 640);
+	        setResizable(true);
+	        setVisible(true);
+	    }
+	    
+	    public BufferedImage toBufferedImage(Image img) {
+	        if (img instanceof BufferedImage) {
+	            return (BufferedImage) img;
+	        }
+	        BufferedImage bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+	        Graphics2D bGr = bimage.createGraphics();
+	        bGr.drawImage(img, 0, 0, null);
+	        bGr.dispose();
+	        return bimage;
+	    }
+	    
+	    public BufferedImage getRotateImage(BufferedImage image, double angle){//angle : degree
+	        double _angle = Math.toRadians(angle);
+	        double sin = Math.abs(Math.sin(_angle));
+	        double cos = Math.abs(Math.cos(_angle));
+	        double w = image.getWidth();
+	        double h = image.getHeight();
+	        int newW = (int)Math.floor(w*cos + h*sin);
+	        int newH = (int)Math.floor(w*sin + h*cos);
+	        GraphicsConfiguration gc = getGraphicsConfiguration();
+	        BufferedImage result = gc.createCompatibleImage(newW, newH, Transparency.TRANSLUCENT);
+	        Graphics2D g = result.createGraphics();
+	        g.translate((newW-w)/2, (newH-h)/2);
+	        g.rotate(_angle, w/2, h/2);
+	        g.drawRenderedImage(image, null);
+	        g.dispose();
+	        return result;
+		}
+	    
+	}
+	
 }
